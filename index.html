@@ -444,13 +444,20 @@ let pendingEmailForOtp = '';
 // that redirect).
 async function apiGet(action, payload) {
   const params = new URLSearchParams(Object.assign({ action }, payload || {}));
-  try {
-    const res = await fetch(`${API_URL}?${params.toString()}`);
-    return await res.json();
-  } catch (e) {
-    return { success: false, code: 'network_error', message: currentLang === 'ar'
-      ? 'تعذر الاتصال بالإنترنت أو بالخادم. حاول مرة أخرى.'
-      : 'Could not reach the network or server. Please try again.' };
+  const url = `${API_URL}?${params.toString()}`;
+  // One silent extra attempt if the first hits a transient network hiccup —
+  // simple and invisible unless both attempts fail.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(url);
+      return await res.json();
+    } catch (e) {
+      if (attempt === 1) {
+        return { success: false, code: 'network_error', message: currentLang === 'ar'
+          ? 'تعذر الاتصال بالإنترنت أو بالخادم. حاول مرة أخرى.'
+          : 'Could not reach the network or server. Please try again.' };
+      }
+    }
   }
 }
 
