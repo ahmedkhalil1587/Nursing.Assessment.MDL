@@ -66,6 +66,10 @@ function handle(e) {
         return json(checkSession(body.token));
       case 'submitForm':
         return json(submitForm(body.token, body.formData, body.signature));
+      case 'listUsers':
+        return json(listUsers(body.token));
+      case 'setUserStatus':
+        return json(setUserStatus(body.token, body.targetEmail, body.status));
       default:
         return json({ success: false, message: 'Unknown action: ' + action });
     }
@@ -172,6 +176,9 @@ function requestOtp(email) {
 
   var headers = found.headers;
   var status = found.row[colIndex(headers, 'Status')];
+  if (status === 'Disabled') {
+    return { success: false, code: 'account_disabled', message: 'تم تعطيل هذا الحساب من قبل الإدارة.' };
+  }
   if (status !== 'Approved') {
     return { success: false, code: 'pending_approval', message: 'حسابك بانتظار موافقة الإدارة.' };
   }
@@ -261,6 +268,67 @@ function checkSession(token) {
     }
   }
   return { success: false, code: 'session_invalid', message: 'جلسة غير صالحة.' };
+}
+
+// ---------- ADMIN: LIST / APPROVE / DISABLE USERS ----------
+function requireAdmin(token) {
+  var session = checkSession(token);
+  if (!session.success) {
+    return { ok: false, response: { success: false, code: 'must_login', message: 'يجب تسجيل الدخول أولاً.' } };
+  }
+  if (session.role !== 'Admin') {
+    return { ok: false, response: { success: false, code: 'not_admin', message: 'غير مصرح لك بالوصول لهذه الصفحة.' } };
+  }
+  return { ok: true, session: session };
+}
+
+function listUsers(token) {
+  var check = requireAdmin(token);
+  if (!check.ok) return check.response;
+
+  var sheet = usersSheet();
+  var data = sheet.getDataRange().getValues();
+  var headers = data[0];
+  var users = [];
+  for (var i = 1; i < data.length; i++) {
+    users.push({
+      fullName: data[i][colIndex(headers, 'FullName')],
+      email: data[i][colIndex(headers, 'Email')],
+      role: data[i][colIndex(headers, 'Role')],
+      status: data[i][colIndex(headers, 'Status')],
+      lastLogin: data[i][colIndex(headers, 'LastLogin')] ? String(data[i][colIndex(headers, 'LastLogin')]) : ''
+    });
+  }
+  return { success: true, users: users };
+}
+
+// newStatus must be one of: Approved, Pending, Disabled
+function setUserStatus(token, targetEmail, newStatus) {
+  var check = requireAdmin(token);
+  if (!check.ok) return check.response;
+
+  var allowed = ['Approved', 'Pending', 'Disabled'];
+  if (allowed.indexOf(newStatus) === -1) {
+    return { success: false, message: 'حالة غير صحيحة.' };
+  }
+
+  var found = findUserRowByEmail(targetEmail);
+  if (!found) {
+    return { success: false, message: 'المستخدم غير موجود.' };
+  }
+  if (String(found.row[colIndex(found.headers, 'Role')]) === 'Admin' && newStatus !== 'Approved') {
+    return { success: false, message: 'لا يمكن تعطيل حساب أدمن.' };
+  }
+
+  var headers = found.headers;
+  var sheet = usersSheet();
+  sheet.getRange(found.rowIndex, colIndex(headers, 'Status') + 1).setValue(newStatus);
+  if (newStatus !== 'Approved') {
+    // Force logout of any active session for this user
+    sheet.getRange(found.rowIndex, colIndex(headers, 'SessionToken') + 1).setValue('');
+    sheet.getRange(found.rowIndex, colIndex(headers, 'SessionExpiry') + 1).setValue('');
+  }
+  return { success: true, code: 'status_updated', message: 'تم تحديث حالة الحساب.' };
 }
 
 // ---------- FORM SUBMISSION ----------

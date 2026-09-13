@@ -99,6 +99,16 @@
   .center{text-align:center;}
   .small-muted{font-size:12px; color:var(--muted);}
   .otp-input{letter-spacing:8px; font-size:22px; text-align:center;}
+  .admin-user-row{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    padding:12px 14px; border:1px solid #e3e0f0; border-radius:10px; margin-bottom:10px; background:#fbfaff;
+  }
+  .admin-user-row .au-info{display:flex; flex-direction:column; gap:4px; font-size:14px;}
+  .admin-user-row .au-actions{display:flex; gap:8px; flex-wrap:wrap;}
+  .badge{display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700; width:fit-content;}
+  .badge.status-ok{background:#e9f7ef; color:var(--success);}
+  .badge.status-pending{background:#fff6dc; color:#8a6d00;}
+  .badge.status-off{background:#fdecea; color:var(--danger);}
 </style>
 </head>
 <body>
@@ -114,6 +124,7 @@
     <button class="langToggle" id="langBtn" onclick="toggleLang()">English</button>
     <div class="userbox hidden" id="userbox">
       <span id="userName"></span>
+      <button class="logout" id="adminNavBtn" style="display:none; background:var(--purple-light); color:#fff;" onclick="openAdminPanel()" data-en="Admin Panel" data-ar="لوحة الإدارة">لوحة الإدارة</button>
       <button class="logout" onclick="logout()" data-en="Logout" data-ar="تسجيل الخروج">تسجيل الخروج</button>
     </div>
   </div>
@@ -168,6 +179,16 @@
     <button class="btn block" onclick="verifyOtp(this)" data-en="Confirm login" data-ar="تأكيد الدخول">تأكيد الدخول</button>
     <p class="center" style="margin-top:14px;">
       <button class="link-btn" onclick="requestOtp(this)" data-en="Resend code" data-ar="إعادة إرسال الرمز">إعادة إرسال الرمز</button>
+    </p>
+  </section>
+
+  <!-- ADMIN PANEL -->
+  <section class="card hidden" id="screen-admin">
+    <h2 data-en="Admin Panel - User Accounts" data-ar="لوحة الإدارة - حسابات المستخدمين">لوحة الإدارة - حسابات المستخدمين</h2>
+    <div id="adminMsg"></div>
+    <div id="adminUsersList"></div>
+    <p class="center" style="margin-top:14px;">
+      <button class="link-btn" onclick="showScreen('form')" data-en="Back to form" data-ar="عودة للفورم">عودة للفورم</button>
     </p>
   </section>
 
@@ -382,7 +403,10 @@ const MESSAGES = {
   session_expired:     { ar: 'انتهت الجلسة. سجل الدخول مرة أخرى.', en: 'Session expired. Please log in again.' },
   session_invalid:     { ar: 'جلسة غير صالحة.', en: 'Invalid session.' },
   must_login:          { ar: 'يجب تسجيل الدخول أولاً.', en: 'You must log in first.' },
-  submit_ok:           { ar: 'تم حفظ النموذج بنجاح.', en: 'Form saved successfully.' }
+  submit_ok:           { ar: 'تم حفظ النموذج بنجاح.', en: 'Form saved successfully.' },
+  account_disabled:    { ar: 'تم تعطيل هذا الحساب من قبل الإدارة.', en: 'This account has been disabled by an admin.' },
+  not_admin:           { ar: 'غير مصرح لك بالوصول لهذه الصفحة.', en: 'You are not authorized to access this page.' },
+  status_updated:      { ar: 'تم تحديث حالة الحساب.', en: 'Account status updated.' }
 };
 
 function t(code, fallback) {
@@ -405,7 +429,7 @@ function toggleLang() {
 }
 
 /* =====================  STATE  ===================== */
-let session = { token: sessionStorage.getItem('token') || '', fullName: sessionStorage.getItem('fullName') || '', email: sessionStorage.getItem('email') || '' };
+let session = { token: sessionStorage.getItem('token') || '', fullName: sessionStorage.getItem('fullName') || '', email: sessionStorage.getItem('email') || '', role: sessionStorage.getItem('role') || '' };
 let pendingEmailForOtp = '';
 
 /* =====================  API HELPER  ===================== */
@@ -469,10 +493,10 @@ async function withLoading(btn, loadingText, fn) {
 
 /* =====================  SCREEN NAV  ===================== */
 function showScreen(name) {
-  ['login','register','otp','form'].forEach(s => {
+  ['login','register','otp','form','admin'].forEach(s => {
     document.getElementById('screen-' + s).classList.toggle('hidden', s !== name);
   });
-  document.getElementById('userbox').classList.toggle('hidden', name !== 'form');
+  document.getElementById('userbox').classList.toggle('hidden', name !== 'form' && name !== 'admin');
 }
 
 function setMsg(id, code, fallback, ok) {
@@ -521,10 +545,11 @@ async function verifyOtp(btn) {
   await withLoading(btn, currentLang === 'ar' ? 'جارٍ التحقق...' : 'Verifying...', async () => {
     const r = await api('verifyOtp', { email: pendingEmailForOtp, otp });
     if (r.success) {
-      session = { token: r.token, fullName: r.fullName, email: r.email };
+      session = { token: r.token, fullName: r.fullName, email: r.email, role: r.role || '' };
       sessionStorage.setItem('token', r.token);
       sessionStorage.setItem('fullName', r.fullName);
       sessionStorage.setItem('email', r.email);
+      sessionStorage.setItem('role', r.role || '');
       enterForm();
     } else {
       setMsg('otpMsg', r.code, r.message);
@@ -534,15 +559,104 @@ async function verifyOtp(btn) {
 
 function logout() {
   sessionStorage.clear();
-  session = { token: '', fullName: '', email: '' };
+  session = { token: '', fullName: '', email: '', role: '' };
   showScreen('login');
 }
 
 async function enterForm() {
   document.getElementById('userName').textContent = session.fullName;
   document.getElementById('nurseNameDisplay').textContent = session.fullName;
+  document.getElementById('adminNavBtn').style.display = (session.role === 'Admin') ? 'inline-block' : 'none';
   showScreen('form');
   initSignaturePad();
+}
+
+function openAdminPanel() {
+  showScreen('admin');
+  loadAdminUsers();
+}
+
+/* =====================  ADMIN PANEL  ===================== */
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str || '';
+  return div.innerHTML;
+}
+
+async function loadAdminUsers() {
+  setMsg('adminMsg', null, '');
+  const listEl = document.getElementById('adminUsersList');
+  listEl.innerHTML = currentLang === 'ar' ? 'جارٍ التحميل...' : 'Loading...';
+
+  const r = await api('listUsers', { token: session.token });
+  if (!r.success) {
+    listEl.innerHTML = '';
+    setMsg('adminMsg', r.code, r.message, false);
+    return;
+  }
+
+  listEl.innerHTML = '';
+  if (!r.users.length) {
+    listEl.innerHTML = `<p class="small-muted">${currentLang === 'ar' ? 'لا يوجد مستخدمون بعد.' : 'No users yet.'}</p>`;
+    return;
+  }
+
+  r.users.forEach(u => {
+    const labels = {
+      Approved: currentLang === 'ar' ? 'مفعّل' : 'Approved',
+      Pending:  currentLang === 'ar' ? 'قيد الانتظار' : 'Pending',
+      Disabled: currentLang === 'ar' ? 'معطّل' : 'Disabled'
+    };
+    const cls = u.status === 'Approved' ? 'status-ok' : (u.status === 'Pending' ? 'status-pending' : 'status-off');
+
+    const row = document.createElement('div');
+    row.className = 'admin-user-row';
+    row.innerHTML = `
+      <div class="au-info">
+        <strong>${escapeHtml(u.fullName)}</strong>
+        <span class="small-muted">${escapeHtml(u.email)} — ${escapeHtml(u.role)}</span>
+        <span class="badge ${cls}">${labels[u.status] || escapeHtml(u.status)}</span>
+      </div>
+      <div class="au-actions"></div>
+    `;
+    const actions = row.querySelector('.au-actions');
+
+    if (u.role !== 'Admin') {
+      if (u.status !== 'Approved') {
+        const approveBtn = document.createElement('button');
+        approveBtn.className = 'btn gold';
+        approveBtn.textContent = currentLang === 'ar' ? 'تفعيل' : 'Approve';
+        approveBtn.onclick = () => changeUserStatus(u.email, 'Approved', approveBtn);
+        actions.appendChild(approveBtn);
+      }
+      if (u.status !== 'Disabled') {
+        const disableBtn = document.createElement('button');
+        disableBtn.className = 'btn';
+        disableBtn.style.background = '#C0392B';
+        disableBtn.textContent = currentLang === 'ar' ? 'تعطيل' : 'Disable';
+        disableBtn.onclick = () => changeUserStatus(u.email, 'Disabled', disableBtn);
+        actions.appendChild(disableBtn);
+      }
+    } else {
+      const note = document.createElement('span');
+      note.className = 'small-muted';
+      note.textContent = currentLang === 'ar' ? 'حساب أدمن' : 'Admin account';
+      actions.appendChild(note);
+    }
+
+    listEl.appendChild(row);
+  });
+}
+
+async function changeUserStatus(email, newStatus, btn) {
+  await withLoading(btn, currentLang === 'ar' ? '...جارٍ الحفظ' : 'Saving...', async () => {
+    const r = await api('setUserStatus', { token: session.token, targetEmail: email, status: newStatus });
+    if (r.success) {
+      loadAdminUsers();
+    } else {
+      setMsg('adminMsg', r.code, r.message, false);
+    }
+  });
 }
 
 /* =====================  RESTORE SESSION ON LOAD  ===================== */
@@ -550,7 +664,7 @@ async function enterForm() {
   applyLang();
   if (session.token) {
     const r = await api('checkSession', { token: session.token });
-    if (r.success) { session.fullName = r.fullName; session.email = r.email; enterForm(); return; }
+    if (r.success) { session.fullName = r.fullName; session.email = r.email; session.role = r.role || ''; enterForm(); return; }
   }
   showScreen('login');
 })();
