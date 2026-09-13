@@ -35,6 +35,16 @@
   header.topbar img{height:46px; background:#fff; border-radius:8px; padding:4px;}
   header.topbar h1{font-size:16px; margin:0; font-weight:600;}
   header.topbar .userbox{font-size:13px; display:flex; align-items:center; gap:10px;}
+  nav.tabbar{
+    background:#fff; display:flex; justify-content:flex-end; gap:6px; padding:10px 20px;
+    box-shadow: 0 2px 8px rgba(59,30,112,0.08); flex-wrap:wrap; position:sticky; top:0; z-index:5;
+  }
+  nav.tabbar .tab-btn{
+    background:transparent; border:none; padding:10px 18px; border-radius:10px; cursor:pointer;
+    font-weight:600; color:var(--muted); font-size:14px; transition:.15s;
+  }
+  nav.tabbar .tab-btn:hover{background:#f2f1f8;}
+  nav.tabbar .tab-btn.active{background:var(--purple); color:#fff;}
   header.topbar button.logout{
     background:var(--gold); color:var(--purple-dark); border:none; padding:6px 12px;
     border-radius:8px; cursor:pointer; font-weight:600; font-size:12px;
@@ -110,6 +120,7 @@
   .badge.status-pending{background:#fff6dc; color:#8a6d00;}
   .badge.status-off{background:#fdecea; color:var(--danger);}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -124,11 +135,17 @@
     <button class="langToggle" id="langBtn" onclick="toggleLang()">English</button>
     <div class="userbox hidden" id="userbox">
       <span id="userName"></span>
-      <button class="logout" id="adminNavBtn" style="display:none; background:var(--purple-light); color:#fff;" onclick="openAdminPanel()" data-en="Admin Panel" data-ar="لوحة الإدارة">لوحة الإدارة</button>
       <button class="logout" onclick="logout()" data-en="Logout" data-ar="تسجيل الخروج">تسجيل الخروج</button>
     </div>
   </div>
 </header>
+
+<nav class="tabbar hidden" id="tabbar">
+  <button class="tab-btn" data-tab="form" onclick="switchTab('form')" data-en="New Assessment" data-ar="تسجيل بيانات">تسجيل بيانات</button>
+  <button class="tab-btn" data-tab="downloads" onclick="switchTab('downloads')" data-en="Download Data" data-ar="تحميل البيانات">تحميل البيانات</button>
+  <button class="tab-btn" data-tab="dashboard" onclick="switchTab('dashboard')" data-en="Dashboard" data-ar="لوحة الإحصائيات">لوحة الإحصائيات</button>
+  <button class="tab-btn" id="adminTabBtn" data-tab="admin" onclick="switchTab('admin')" style="display:none;" data-en="Admin Panel" data-ar="لوحة الإدارة">لوحة الإدارة</button>
+</nav>
 
 <main>
 
@@ -188,8 +205,26 @@
     <div id="adminMsg"></div>
     <div id="adminUsersList"></div>
     <p class="center" style="margin-top:14px;">
-      <button class="link-btn" onclick="showScreen('form')" data-en="Back to form" data-ar="عودة للفورم">عودة للفورم</button>
+      <button class="link-btn" onclick="switchTab('form')" data-en="Back to form" data-ar="عودة للفورم">عودة للفورم</button>
     </p>
+  </section>
+
+  <!-- DOWNLOADS -->
+  <section class="card hidden" id="screen-downloads">
+    <h2 data-en="Download Recorded Data" data-ar="تحميل البيانات المسجلة">تحميل البيانات المسجلة</h2>
+    <div id="downloadMsg"></div>
+    <p class="small-muted" data-en="Downloads every assessment recorded so far as an Excel file." data-ar="تحميل كل نماذج التقييم المسجلة حتى الآن في ملف إكسيل واحد.">تحميل كل نماذج التقييم المسجلة حتى الآن في ملف إكسيل واحد.</p>
+    <button class="btn block" onclick="downloadSubmissions(this)" data-en="Download as Excel" data-ar="تحميل كملف إكسيل">تحميل كملف إكسيل</button>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section class="hidden" id="screen-dashboard">
+    <div class="card">
+      <h2 data-en="Statistics Dashboard" data-ar="لوحة الإحصائيات">لوحة الإحصائيات</h2>
+      <div id="dashboardMsg"></div>
+      <p><span data-en="Total submissions:" data-ar="إجمالي النماذج المسجلة:">إجمالي النماذج المسجلة:</span> <strong id="statTotal">0</strong></p>
+    </div>
+    <div id="dashboardCharts"></div>
   </section>
 
   <!-- NURSING FORM -->
@@ -408,7 +443,8 @@ const MESSAGES = {
   not_admin:           { ar: 'غير مصرح لك بالوصول لهذه الصفحة.', en: 'You are not authorized to access this page.' },
   status_updated:      { ar: 'تم تحديث حالة الحساب.', en: 'Account status updated.' },
   busy:                { ar: 'النظام مشغول، حاول مرة أخرى.', en: 'System is busy, please try again.' },
-  server_error:        { ar: 'حدث خطأ في الخادم. حاول مرة أخرى.', en: 'A server error occurred. Please try again.' }
+  server_error:        { ar: 'حدث خطأ في الخادم. حاول مرة أخرى.', en: 'A server error occurred. Please try again.' },
+  export_failed:       { ar: 'تعذر تجهيز ملف الإكسيل. حاول مرة أخرى.', en: 'Could not prepare the Excel file. Please try again.' }
 };
 
 function t(code, fallback) {
@@ -516,11 +552,22 @@ async function withLoading(btn, loadingText, fn) {
 }
 
 /* =====================  SCREEN NAV  ===================== */
+const APP_TABS = ['form', 'downloads', 'dashboard', 'admin'];
+
 function showScreen(name) {
-  ['login','register','otp','form','admin'].forEach(s => {
+  ['login', 'register', 'otp'].concat(APP_TABS).forEach(s => {
     document.getElementById('screen-' + s).classList.toggle('hidden', s !== name);
   });
-  document.getElementById('userbox').classList.toggle('hidden', name !== 'form' && name !== 'admin');
+  const isAppTab = APP_TABS.includes(name);
+  document.getElementById('userbox').classList.toggle('hidden', !isAppTab);
+  document.getElementById('tabbar').classList.toggle('hidden', !isAppTab);
+}
+
+function switchTab(tab) {
+  showScreen(tab);
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  if (tab === 'admin') loadAdminUsers();
+  if (tab === 'dashboard') loadDashboard();
 }
 
 function setMsg(id, code, fallback, ok) {
@@ -593,14 +640,9 @@ function logout() {
 async function enterForm() {
   document.getElementById('userName').textContent = session.fullName;
   document.getElementById('nurseNameDisplay').textContent = session.fullName;
-  document.getElementById('adminNavBtn').style.display = (session.role === 'Admin') ? 'inline-block' : 'none';
-  showScreen('form');
+  document.getElementById('adminTabBtn').style.display = (session.role === 'Admin') ? 'inline-block' : 'none';
+  switchTab('form');
   initSignaturePad();
-}
-
-function openAdminPanel() {
-  showScreen('admin');
-  loadAdminUsers();
 }
 
 /* =====================  ADMIN PANEL  ===================== */
@@ -683,6 +725,95 @@ async function changeUserStatus(email, newStatus, btn) {
     } else {
       setMsg('adminMsg', r.code, r.message, false);
     }
+  });
+}
+
+/* =====================  DOWNLOADS TAB  ===================== */
+async function downloadSubmissions(btn) {
+  setMsg('downloadMsg', null, '');
+  await withLoading(btn, currentLang === 'ar' ? 'جارٍ التجهيز...' : 'Preparing...', async () => {
+    const r = await api('exportSubmissions', { token: session.token });
+    if (!r.success) {
+      setMsg('downloadMsg', r.code, r.message, false);
+      return;
+    }
+    try {
+      const byteChars = atob(r.base64);
+      const byteNumbers = new Array(byteChars.length);
+      for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = r.fileName || 'Nursing_Assessment_Data.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setMsg('downloadMsg', null, currentLang === 'ar' ? 'تعذر تجهيز الملف للتحميل.' : 'Could not prepare the file for download.', false);
+    }
+  });
+}
+
+/* =====================  DASHBOARD TAB  ===================== */
+const DASHBOARD_FIELDS = [
+  { key: 'Fever', en: 'Fever', ar: 'الحمى' },
+  { key: 'Rash', en: 'Rash', ar: 'الطفح الجلدي' },
+  { key: 'CoughSOB', en: 'Cough / Shortness of Breath', ar: 'السعال / ضيق التنفس' },
+  { key: 'FallRiskScore', en: 'Fall Risk', ar: 'خطر السقوط' },
+  { key: 'LanguageSpoken', en: 'Language Spoken', ar: 'اللغة المتحدثة' },
+  { key: 'ReasonForVisit', en: 'Reason for Visit', ar: 'سبب الزيارة' },
+  { key: 'ModeOfAccess', en: 'Mode of Access', ar: 'طريقة الوصول' },
+  { key: 'Allergies', en: 'Allergies', ar: 'الحساسية' }
+];
+let chartInstances = {};
+
+async function loadDashboard() {
+  setMsg('dashboardMsg', null, '');
+  const container = document.getElementById('dashboardCharts');
+  container.innerHTML = currentLang === 'ar' ? 'جارٍ التحميل...' : 'Loading...';
+
+  const r = await api('getStats', { token: session.token });
+  if (!r.success) {
+    container.innerHTML = '';
+    setMsg('dashboardMsg', r.code, r.message, false);
+    return;
+  }
+
+  document.getElementById('statTotal').textContent = r.total;
+  container.innerHTML = '';
+
+  if (!r.total) {
+    container.innerHTML = `<p class="small-muted">${currentLang === 'ar' ? 'لا توجد بيانات مسجلة بعد.' : 'No data recorded yet.'}</p>`;
+    return;
+  }
+
+  DASHBOARD_FIELDS.forEach(f => {
+    const title = currentLang === 'ar' ? f.ar : f.en;
+    const canvasId = 'chart_' + f.key;
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `<h2>${escapeHtml(title)}</h2><canvas id="${canvasId}" height="220"></canvas>`;
+    container.appendChild(card);
+
+    const dataObj = (r.charts && r.charts[f.key]) || {};
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    if (chartInstances[canvasId]) chartInstances[canvasId].destroy();
+    chartInstances[canvasId] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: Object.keys(dataObj),
+        datasets: [{ data: Object.values(dataObj), backgroundColor: '#6A4BAE', borderRadius: 6 }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+      }
+    });
   });
 }
 

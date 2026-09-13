@@ -59,7 +59,7 @@ function handle(e) {
 
   // Read-only actions do not need the script lock — locking them only adds
   // latency and can make them wait behind unrelated write operations.
-  var READ_ONLY_ACTIONS = { checkSession: true, listUsers: true };
+  var READ_ONLY_ACTIONS = { checkSession: true, listUsers: true, exportSubmissions: true, getStats: true };
   var needsLock = !READ_ONLY_ACTIONS[action];
 
   var lock = null;
@@ -100,6 +100,10 @@ function route(action, body) {
       return listUsers(body.token);
     case 'setUserStatus':
       return setUserStatus(body.token, body.targetEmail, body.status);
+    case 'exportSubmissions':
+      return exportSubmissions(body.token);
+    case 'getStats':
+      return getStats(body.token);
     default:
       return { success: false, code: 'unknown_action', message: 'Unknown action: ' + action };
   }
@@ -356,6 +360,70 @@ function setUserStatus(token, targetEmail, newStatus) {
     sheet.getRange(found.rowIndex, colIndex(headers, 'SessionExpiry') + 1).setValue('');
   }
   return { success: true, code: 'status_updated', message: 'تم تحديث حالة الحساب.' };
+}
+
+// ---------- DOWNLOAD: EXPORT SUBMISSIONS AS EXCEL ----------
+// Any logged-in user can download the recorded data (not admin-only), per
+// how this system is used day to day.
+function exportSubmissions(token) {
+  var session = checkSession(token);
+  if (!session.success) {
+    return { success: false, code: 'must_login', message: 'يجب تسجيل الدخول أولاً.' };
+  }
+
+  try {
+    var sheetId = submissionsSheet().getSheetId();
+    var url = 'https://docs.google.com/spreadsheets/d/' + SPREADSHEET_ID + '/export?format=xlsx&gid=' + sheetId;
+    var oauthToken = ScriptApp.getOAuthToken();
+    var response = UrlFetchApp.fetch(url, {
+      headers: { Authorization: 'Bearer ' + oauthToken },
+      muteHttpExceptions: true
+    });
+
+    if (response.getResponseCode() !== 200) {
+      Logger.log('exportSubmissions HTTP ' + response.getResponseCode() + ': ' + response.getContentText());
+      return { success: false, code: 'export_failed', message: 'تعذر تجهيز ملف الإكسيل.' };
+    }
+
+    var base64 = Utilities.base64Encode(response.getBlob().getBytes());
+    var stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone() || 'GMT', 'yyyyMMdd_HHmm');
+    return { success: true, base64: base64, fileName: 'Nursing_Assessment_Data_' + stamp + '.xlsx' };
+  } catch (err) {
+    Logger.log('exportSubmissions error: ' + err);
+    return { success: false, code: 'export_failed', message: 'تعذر تجهيز ملف الإكسيل.' };
+  }
+}
+
+// ---------- DASHBOARD: SUBMISSION STATISTICS ----------
+function getStats(token) {
+  var session = checkSession(token);
+  if (!session.success) {
+    return { success: false, code: 'must_login', message: 'يجب تسجيل الدخول أولاً.' };
+  }
+
+  var sheet = submissionsSheet();
+  var data = sheet.getDataRange().getValues();
+  if (data.length < 2) {
+    return { success: true, total: 0, charts: {} };
+  }
+
+  var headers = data[0];
+  var rows = data.slice(1);
+
+  var FIELDS = ['Fever', 'Rash', 'CoughSOB', 'FallRiskScore', 'LanguageSpoken', 'ReasonForVisit', 'ModeOfAccess', 'Allergies'];
+  var charts = {};
+  FIELDS.forEach(function (field) {
+    var idx = colIndex(headers, field);
+    var counts = {};
+    rows.forEach(function (row) {
+      var value = String(idx >= 0 ? row[idx] : '').trim();
+      if (!value) value = 'N/A';
+      counts[value] = (counts[value] || 0) + 1;
+    });
+    charts[field] = counts;
+  });
+
+  return { success: true, total: rows.length, charts: charts };
 }
 
 // ---------- FORM SUBMISSION ----------
