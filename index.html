@@ -179,7 +179,7 @@
       <div id="formMsg"></div>
       <div class="two-col">
         <div class="field"><label data-en="File No" data-ar="رقم الملف">File No</label><input type="text" id="FileNo"></div>
-        <div class="field"><label data-en="Patient Number" data-ar="رقم المريض">Patient Number</label><input type="text" id="PatientNumber"></div>
+        <div class="field"><label data-en="Patient Name" data-ar="اسم المريض">Patient Name</label><input type="text" id="PatientName"></div>
       </div>
 
       <div class="row-q"><div class="qtext" data-en="1. Have you had fever (elevated temperature)?" data-ar="1. هل شعرت بارتفاع في درجة الحرارة (حمى)؟">1. Have you had fever (elevated temperature)?</div><div class="yn-group" data-field="Fever"><button data-v="Yes" data-en="Yes" data-ar="نعم">Yes</button><button data-v="No" data-en="No" data-ar="لا">No</button></div></div>
@@ -613,7 +613,7 @@ function collectFormData() {
   document.querySelectorAll('.yn-group[data-field]').forEach(g => data[g.dataset.field] = g.dataset.value || '');
   document.querySelectorAll('.choice-grid[data-field]').forEach(g => data[g.dataset.field] = g.dataset.value || '');
 
-  ['FileNo','PatientNumber','TravelWhenDetails','ChiefComplaint','Temp','BPSystolic','BPDiastolic',
+  ['FileNo','PatientName','TravelWhenDetails','ChiefComplaint','Temp','BPSystolic','BPDiastolic',
    'Pulse','RR','Height','Weight','RecentCareChanges'].forEach(id => {
     const el = document.getElementById(id);
     if (el) data[id] = el.value;

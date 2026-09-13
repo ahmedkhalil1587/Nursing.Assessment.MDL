@@ -344,7 +344,7 @@ function setupSheets() {
   users.appendRow([new Date(), 'IT Admin', ADMIN_EMAIL, 'Admin', 'Approved', '', '', '', '', '']);
 
   var subsHeaders = [
-    'SubmissionID','Timestamp','FileNo','PatientNumber',
+    'SubmissionID','Timestamp','FileNo','PatientName',
     'Fever','Rash','CoughSOB','TraveledOutsideKSA','TravelWhenDetails','HealthcareWorkerExposure','CloseContactSimilarSymptoms',
     'ActionSurgicalMask','ActionIsolationRoom','ActionWaitingAreaSeparation','ActionHandHygiene','ActionPrivateRoom',
     'ReceivedFrom','FirstVisit','LanguageSpoken','HistoryTakenFrom','Allergies',
