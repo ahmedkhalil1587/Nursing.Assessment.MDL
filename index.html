@@ -119,6 +119,9 @@
   .badge.status-ok{background:#e9f7ef; color:var(--success);}
   .badge.status-pending{background:#fff6dc; color:#8a6d00;}
   .badge.status-off{background:#fdecea; color:var(--danger);}
+  .stats-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:18px; margin-top:12px;}
+  .stat-item{background:#fbfaff; border:1px solid #e3e0f0; border-radius:12px; padding:14px;}
+  .stat-item h3{font-size:12.5px; margin:0 0 10px; color:var(--muted); text-align:center; font-weight:700; min-height:32px;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 </head>
@@ -758,17 +761,110 @@ async function downloadSubmissions(btn) {
 }
 
 /* =====================  DASHBOARD TAB  ===================== */
-const DASHBOARD_FIELDS = [
-  { key: 'Fever', en: 'Fever', ar: 'الحمى' },
-  { key: 'Rash', en: 'Rash', ar: 'الطفح الجلدي' },
-  { key: 'CoughSOB', en: 'Cough / Shortness of Breath', ar: 'السعال / ضيق التنفس' },
-  { key: 'FallRiskScore', en: 'Fall Risk', ar: 'خطر السقوط' },
-  { key: 'LanguageSpoken', en: 'Language Spoken', ar: 'اللغة المتحدثة' },
-  { key: 'ReasonForVisit', en: 'Reason for Visit', ar: 'سبب الزيارة' },
-  { key: 'ModeOfAccess', en: 'Mode of Access', ar: 'طريقة الوصول' },
-  { key: 'Allergies', en: 'Allergies', ar: 'الحساسية' }
+// Every Yes/No or multiple-choice question in the form, grouped the same
+// way the form itself is grouped, so the dashboard reads like a statistical
+// mirror of the form rather than a generic summary.
+const DASHBOARD_CATEGORIES = [
+  {
+    en: 'Triage Screening', ar: 'فحص الفرز المبكر',
+    fields: [
+      { key: 'Fever', en: 'Fever (elevated temperature)', ar: 'الحمى (ارتفاع درجة الحرارة)' },
+      { key: 'Rash', en: 'Rash / unusual skin lesion', ar: 'طفح جلدي / آفة جلدية' },
+      { key: 'CoughSOB', en: 'Cough / shortness of breath', ar: 'سعال / ضيق تنفس' },
+      { key: 'TraveledOutsideKSA', en: 'Traveled outside KSA', ar: 'سفر خارج السعودية' },
+      { key: 'HealthcareWorkerExposure', en: 'Healthcare worker exposure', ar: 'تعرض عامل صحي' },
+      { key: 'CloseContactSimilarSymptoms', en: 'Close contact with similar symptoms', ar: 'مخالطة لأعراض مشابهة' },
+      { key: 'ActionSurgicalMask', en: 'Given surgical mask', ar: 'تم إعطاء كمامة جراحية' },
+      { key: 'ActionIsolationRoom', en: 'Isolation room used', ar: 'استخدام غرفة عزل' },
+      { key: 'ActionWaitingAreaSeparation', en: '3ft waiting area separation', ar: 'فصل 3 أقدام بالانتظار' },
+      { key: 'ActionHandHygiene', en: 'Hand hygiene performed', ar: 'تم تنفيذ نظافة اليدين' },
+      { key: 'ActionPrivateRoom', en: 'Private room pending evaluation', ar: 'غرفة خاصة بانتظار التقييم' }
+    ]
+  },
+  {
+    en: 'General Information', ar: 'المعلومات العامة',
+    fields: [
+      { key: 'ReceivedFrom', en: 'Received from', ar: 'تم الاستقبال من' },
+      { key: 'FirstVisit', en: 'First visit', ar: 'زيارة أولى' },
+      { key: 'LanguageSpoken', en: 'Language spoken', ar: 'اللغة المتحدثة' },
+      { key: 'HistoryTakenFrom', en: 'History taken from', ar: 'أخذ التاريخ من' },
+      { key: 'Allergies', en: 'Allergies', ar: 'الحساسية' },
+      { key: 'ModeOfAccess', en: 'Mode of access', ar: 'طريقة الوصول' },
+      { key: 'ReasonForVisit', en: 'Reason for visit', ar: 'سبب الزيارة' },
+      { key: 'Accompanied', en: 'Accompanied by', ar: 'برفقة' },
+      { key: 'InterpreterNeed', en: 'Interpreter needed', ar: 'الحاجة لمترجم' },
+      { key: 'Diet', en: 'Diet', ar: 'النظام الغذائي' },
+      { key: 'Transportation', en: 'Transportation', ar: 'وسيلة النقل' }
+    ]
+  },
+  {
+    en: 'Initial Nursing Assessment', ar: 'التقييم التمريضي الأولي',
+    fields: [
+      { key: 'TempMethod', en: 'Temperature method', ar: 'طريقة قياس الحرارة' },
+      { key: 'Skin', en: 'Skin', ar: 'الجلد' }
+    ]
+  },
+  {
+    en: 'Nutritional / Functional / Psychological / Social / Pain', ar: 'الغذائي / الوظيفي / النفسي / الاجتماعي / الألم',
+    fields: [
+      { key: 'WeightChangePast6Months', en: 'Weight change (6 months)', ar: 'تغيّر الوزن (6 أشهر)' },
+      { key: 'FunctionalStatus', en: 'Functional status', ar: 'الحالة الوظيفية' },
+      { key: 'PsychologicalStatus', en: 'Psychological status', ar: 'الحالة النفسية' },
+      { key: 'LiveAlone', en: 'Lives alone', ar: 'يعيش بمفرده' },
+      { key: 'CareGiverAvailable', en: 'Care giver available', ar: 'يوجد مقدم رعاية' },
+      { key: 'PainScreening', en: 'Pain screening', ar: 'فحص الألم' }
+    ]
+  },
+  {
+    en: 'Fall Risk Screening', ar: 'فحص خطر السقوط',
+    fields: [
+      { key: 'FallPast3Months', en: 'Fall in past 3 months', ar: 'سقوط خلال 3 أشهر' },
+      { key: 'DifficultyWalking', en: 'Difficulty walking', ar: 'صعوبة في المشي' },
+      { key: 'UseAssistiveDevice', en: 'Uses assistive device', ar: 'يستخدم جهاز مساعد' },
+      { key: 'ReceiveFallRiskMedication', en: 'On fall-risk medication', ar: 'يتناول أدوية خطر سقوط' },
+      { key: 'FallRiskScore', en: 'Fall risk score', ar: 'درجة خطر السقوط' }
+    ]
+  },
+  {
+    en: 'Fall Risk Interventions', ar: 'إجراءات الوقاية من السقوط',
+    fields: [
+      { key: 'InterventionYellowWristband', en: 'Yellow wristband attached', ar: 'تركيب سوار أصفر' },
+      { key: 'InterventionDesignatedClinic', en: 'Sent to designated clinic', ar: 'التوجه للعيادة المخصصة' },
+      { key: 'InterventionWheelChair', en: 'Wheelchair provided', ar: 'توفير كرسي متحرك' },
+      { key: 'InterventionFallsPamphlet', en: 'Falls pamphlet provided', ar: 'تقديم نشرة الوقاية' }
+    ]
+  }
 ];
+
+const CHART_PALETTE = ['#3B1E70', '#C9A227', '#6A4BAE', '#E4C34F', '#8a6d00', '#1E8449', '#C0392B', '#6b6480'];
 let chartInstances = {};
+
+function buildChartConfig(dataObj) {
+  const labels = Object.keys(dataObj);
+  const values = Object.values(dataObj);
+  const isYesNo = labels.length <= 2 && labels.every(k => k === 'Yes' || k === 'No');
+
+  if (isYesNo) {
+    const order = ['Yes', 'No'].filter(k => labels.includes(k));
+    const orderedValues = order.map(k => dataObj[k]);
+    const orderedLabels = order.map(k => currentLang === 'ar' ? (k === 'Yes' ? 'نعم' : 'لا') : k);
+    return {
+      type: 'doughnut',
+      data: { labels: orderedLabels, datasets: [{ data: orderedValues, backgroundColor: ['#3B1E70', '#C9A227'] }] },
+      options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+    };
+  }
+
+  return {
+    type: 'bar',
+    data: { labels, datasets: [{ data: values, backgroundColor: labels.map((_, i) => CHART_PALETTE[i % CHART_PALETTE.length]), borderRadius: 6 }] },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+    }
+  };
+}
 
 async function loadDashboard() {
   setMsg('dashboardMsg', null, '');
@@ -790,29 +886,29 @@ async function loadDashboard() {
     return;
   }
 
-  DASHBOARD_FIELDS.forEach(f => {
-    const title = currentLang === 'ar' ? f.ar : f.en;
-    const canvasId = 'chart_' + f.key;
-
+  DASHBOARD_CATEGORIES.forEach((cat, catIdx) => {
+    const catTitle = currentLang === 'ar' ? cat.ar : cat.en;
     const card = document.createElement('div');
     card.className = 'card';
-    card.innerHTML = `<h2>${escapeHtml(title)}</h2><canvas id="${canvasId}" height="220"></canvas>`;
+    const grid = document.createElement('div');
+    grid.className = 'stats-grid';
+    card.innerHTML = `<h2>${escapeHtml(catTitle)}</h2>`;
+    card.appendChild(grid);
     container.appendChild(card);
 
-    const dataObj = (r.charts && r.charts[f.key]) || {};
-    const ctx = document.getElementById(canvasId).getContext('2d');
-    if (chartInstances[canvasId]) chartInstances[canvasId].destroy();
-    chartInstances[canvasId] = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: Object.keys(dataObj),
-        datasets: [{ data: Object.values(dataObj), backgroundColor: '#6A4BAE', borderRadius: 6 }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
-      }
+    cat.fields.forEach((f, fIdx) => {
+      const title = currentLang === 'ar' ? f.ar : f.en;
+      const canvasId = 'chart_' + catIdx + '_' + fIdx;
+
+      const item = document.createElement('div');
+      item.className = 'stat-item';
+      item.innerHTML = `<h3>${escapeHtml(title)}</h3><canvas id="${canvasId}" height="170"></canvas>`;
+      grid.appendChild(item);
+
+      const dataObj = (r.charts && r.charts[f.key]) || {};
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      if (chartInstances[canvasId]) chartInstances[canvasId].destroy();
+      chartInstances[canvasId] = new Chart(ctx, buildChartConfig(dataObj));
     });
   });
 }

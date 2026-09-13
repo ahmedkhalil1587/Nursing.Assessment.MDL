@@ -410,7 +410,16 @@ function getStats(token) {
   var headers = data[0];
   var rows = data.slice(1);
 
-  var FIELDS = ['Fever', 'Rash', 'CoughSOB', 'FallRiskScore', 'LanguageSpoken', 'ReasonForVisit', 'ModeOfAccess', 'Allergies'];
+  var FIELDS = [
+    'Fever', 'Rash', 'CoughSOB', 'TraveledOutsideKSA', 'HealthcareWorkerExposure', 'CloseContactSimilarSymptoms',
+    'ActionSurgicalMask', 'ActionIsolationRoom', 'ActionWaitingAreaSeparation', 'ActionHandHygiene', 'ActionPrivateRoom',
+    'ReceivedFrom', 'FirstVisit', 'LanguageSpoken', 'HistoryTakenFrom', 'Allergies',
+    'ModeOfAccess', 'ReasonForVisit', 'Accompanied', 'InterpreterNeed', 'Diet', 'Transportation',
+    'TempMethod', 'Skin',
+    'WeightChangePast6Months', 'FunctionalStatus', 'PsychologicalStatus', 'LiveAlone', 'CareGiverAvailable', 'PainScreening',
+    'FallPast3Months', 'DifficultyWalking', 'UseAssistiveDevice', 'ReceiveFallRiskMedication', 'FallRiskScore',
+    'InterventionYellowWristband', 'InterventionDesignatedClinic', 'InterventionWheelChair', 'InterventionFallsPamphlet'
+  ];
   var charts = {};
   FIELDS.forEach(function (field) {
     var idx = colIndex(headers, field);
