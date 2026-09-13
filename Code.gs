@@ -43,38 +43,55 @@ function handle(e) {
       body = JSON.parse(e.postData.contents);
     }
   } catch (err) {
-    return json({ success: false, message: 'Invalid JSON body' });
+    return json({ success: false, code: 'bad_request', message: 'Invalid JSON body' });
   }
   if (!action) action = body.action || '';
 
-  var lock = LockService.getScriptLock();
-  try {
-    lock.waitLock(15000);
-  } catch (err) {
-    return json({ success: false, message: 'النظام مشغول، حاول مرة أخرى' });
+  // Read-only actions do not need the script lock — locking them only adds
+  // latency and can make them wait behind unrelated write operations.
+  var READ_ONLY_ACTIONS = { checkSession: true, listUsers: true };
+  var needsLock = !READ_ONLY_ACTIONS[action];
+
+  var lock = null;
+  if (needsLock) {
+    lock = LockService.getScriptLock();
+    try {
+      lock.waitLock(10000);
+    } catch (err) {
+      return json({ success: false, code: 'busy', message: 'النظام مشغول، حاول مرة أخرى.' });
+    }
   }
 
   try {
-    switch (action) {
-      case 'register':
-        return json(registerUser(body.fullName, body.email));
-      case 'requestOtp':
-        return json(requestOtp(body.email));
-      case 'verifyOtp':
-        return json(verifyOtp(body.email, body.otp));
-      case 'checkSession':
-        return json(checkSession(body.token));
-      case 'submitForm':
-        return json(submitForm(body.token, body.formData, body.signature));
-      case 'listUsers':
-        return json(listUsers(body.token));
-      case 'setUserStatus':
-        return json(setUserStatus(body.token, body.targetEmail, body.status));
-      default:
-        return json({ success: false, message: 'Unknown action: ' + action });
-    }
+    return json(route(action, body));
+  } catch (err) {
+    // Never let an uncaught exception fall through — Apps Script would then
+    // return an HTML error page instead of JSON, which breaks the client.
+    Logger.log('Unhandled error in action "' + action + '": ' + err + (err && err.stack ? '\n' + err.stack : ''));
+    return json({ success: false, code: 'server_error', message: 'حدث خطأ في الخادم. حاول مرة أخرى.' });
   } finally {
-    lock.releaseLock();
+    if (lock) lock.releaseLock();
+  }
+}
+
+function route(action, body) {
+  switch (action) {
+    case 'register':
+      return registerUser(body.fullName, body.email);
+    case 'requestOtp':
+      return requestOtp(body.email);
+    case 'verifyOtp':
+      return verifyOtp(body.email, body.otp);
+    case 'checkSession':
+      return checkSession(body.token);
+    case 'submitForm':
+      return submitForm(body.token, body.formData, body.signature);
+    case 'listUsers':
+      return listUsers(body.token);
+    case 'setUserStatus':
+      return setUserStatus(body.token, body.targetEmail, body.status);
+    default:
+      return { success: false, code: 'unknown_action', message: 'Unknown action: ' + action };
   }
 }
 
