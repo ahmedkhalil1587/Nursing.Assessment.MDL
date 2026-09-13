@@ -105,8 +105,8 @@
 
 <header class="topbar">
   <div class="brand">
-    <img src="LOGO_MADLOUH_URL_HERE" alt="Madlouh Med">
-    <img src="LOGO_CBAHI_URL_HERE" alt="CBAHI">
+    <img src="Madlouh_Logo.png" alt="Madlouh Med">
+    <img src="CBAHI.png" alt="CBAHI">
     <h1><span data-en="Initial Nursing Assessment System" data-ar="نظام التقييم التمريضي الأولي">نظام التقييم التمريضي الأولي</span><br>
       <span style="font-weight:400;font-size:12px;" data-en="Madlouh Medical Group" data-ar="مجمع المدلوح الطبي">مجمع المدلوح الطبي</span></h1>
   </div>
@@ -129,7 +129,7 @@
       <label data-en="Email" data-ar="البريد الإلكتروني">البريد الإلكتروني</label>
       <input type="email" id="loginEmail" placeholder="example@madlouh.com.sa">
     </div>
-    <button class="btn block" onclick="requestOtp()" data-en="Send Login Code (OTP)" data-ar="إرسال رمز الدخول (OTP)">إرسال رمز الدخول (OTP)</button>
+    <button class="btn block" onclick="requestOtp(this)" data-en="Send Login Code (OTP)" data-ar="إرسال رمز الدخول (OTP)">إرسال رمز الدخول (OTP)</button>
     <p class="center" style="margin-top:14px;">
       <span data-en="Don't have an account?" data-ar="ليس لديك حساب؟">ليس لديك حساب؟</span>
       <button class="link-btn" onclick="showScreen('register')" data-en="Create new account" data-ar="تسجيل حساب جديد">تسجيل حساب جديد</button>
@@ -148,7 +148,7 @@
       <label data-en="Email" data-ar="البريد الإلكتروني">البريد الإلكتروني</label>
       <input type="email" id="regEmail">
     </div>
-    <button class="btn block" onclick="registerUser()" data-en="Submit registration request" data-ar="إرسال طلب التسجيل">إرسال طلب التسجيل</button>
+    <button class="btn block" onclick="registerUser(this)" data-en="Submit registration request" data-ar="إرسال طلب التسجيل">إرسال طلب التسجيل</button>
     <p class="center" style="margin-top:14px;">
       <button class="link-btn" onclick="showScreen('login')" data-en="Back to login" data-ar="عودة لتسجيل الدخول">عودة لتسجيل الدخول</button>
     </p>
@@ -165,9 +165,9 @@
     <div class="field">
       <input type="text" maxlength="6" id="otpCode" class="otp-input" placeholder="------">
     </div>
-    <button class="btn block" onclick="verifyOtp()" data-en="Confirm login" data-ar="تأكيد الدخول">تأكيد الدخول</button>
+    <button class="btn block" onclick="verifyOtp(this)" data-en="Confirm login" data-ar="تأكيد الدخول">تأكيد الدخول</button>
     <p class="center" style="margin-top:14px;">
-      <button class="link-btn" onclick="requestOtp()" data-en="Resend code" data-ar="إعادة إرسال الرمز">إعادة إرسال الرمز</button>
+      <button class="link-btn" onclick="requestOtp(this)" data-en="Resend code" data-ar="إعادة إرسال الرمز">إعادة إرسال الرمز</button>
     </p>
   </section>
 
@@ -353,7 +353,7 @@
     <div class="card">
       <h2 data-en="Confirm & Save" data-ar="تأكيد وحفظ">تأكيد وحفظ</h2>
       <p><span data-en="Nurse responsible for this form:" data-ar="الممرضة المسؤولة عن تسجيل هذا النموذج:">الممرضة المسؤولة عن تسجيل هذا النموذج:</span> <strong id="nurseNameDisplay"></strong></p>
-      <button class="btn block" onclick="submitForm()" data-en="Save form" data-ar="حفظ النموذج">حفظ النموذج</button>
+      <button class="btn block" onclick="submitForm(this)" data-en="Save form" data-ar="حفظ النموذج">حفظ النموذج</button>
     </div>
 
   </section>
@@ -410,12 +410,44 @@ let pendingEmailForOtp = '';
 
 /* =====================  API HELPER  ===================== */
 async function api(action, payload) {
-  const res = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // avoids CORS preflight on Apps Script
-    body: JSON.stringify(Object.assign({ action }, payload || {}))
-  });
-  return res.json();
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // avoids CORS preflight on Apps Script
+      body: JSON.stringify(Object.assign({ action }, payload || {}))
+    });
+    const text = await res.text();
+    try {
+      return JSON.parse(text);
+    } catch (parseErr) {
+      // The server did not return JSON (e.g. a Google login/consent page).
+      // This almost always means the Apps Script deployment's "Who has
+      // access" is not set to "Anyone".
+      return { success: false, code: 'bad_response', message: currentLang === 'ar'
+        ? 'تعذر الاتصال بالخادم بشكل صحيح. تأكد أن إعداد الوصول في الديبلويمنت هو Anyone.'
+        : 'Could not reach the server correctly. Check the deployment access is set to Anyone.' };
+    }
+  } catch (networkErr) {
+    return { success: false, code: 'network_error', message: currentLang === 'ar'
+      ? 'تعذر الاتصال بالإنترنت أو بالخادم. حاول مرة أخرى.'
+      : 'Could not reach the network or server. Please try again.' };
+  }
+}
+
+// Disables a button and swaps its text to a loading label while an async
+// action runs, then restores it — also prevents duplicate/double-click
+// submissions (a common cause of a second OTP overwriting the first).
+async function withLoading(btn, loadingText, fn) {
+  if (btn.disabled) return; // already in-flight, ignore extra clicks
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = loadingText;
+  try {
+    await fn();
+  } finally {
+    btn.disabled = false;
+    btn.textContent = original;
+  }
 }
 
 /* =====================  SCREEN NAV  ===================== */
@@ -433,42 +465,54 @@ function setMsg(id, code, fallback, ok) {
 }
 
 /* =====================  AUTH  ===================== */
-async function registerUser() {
+async function registerUser(btn) {
   const fullName = document.getElementById('regName').value.trim();
   const email = document.getElementById('regEmail').value.trim();
   setMsg('registerMsg', null, '');
   if (!fullName || !email) { setMsg('registerMsg', 'invalid_fields'); return; }
-  const r = await api('register', { fullName, email });
-  setMsg('registerMsg', r.code, r.message, r.success);
+  await withLoading(btn, currentLang === 'ar' ? 'جارٍ الإرسال...' : 'Sending...', async () => {
+    const r = await api('register', { fullName, email });
+    setMsg('registerMsg', r.code, r.message, r.success);
+  });
 }
 
-async function requestOtp() {
+async function requestOtp(btn) {
   const email = (document.getElementById('loginEmail') ? document.getElementById('loginEmail').value.trim() : pendingEmailForOtp);
   if (!email) { setMsg('loginMsg', null, currentLang === 'ar' ? 'أدخل البريد الإلكتروني' : 'Enter your email'); return; }
   pendingEmailForOtp = email;
   setMsg('loginMsg', null, '');
-  const r = await api('requestOtp', { email });
-  if (r.success) {
-    document.getElementById('otpEmailLabel').textContent = email;
-    setMsg('otpMsg', null, '');
-    showScreen('otp');
+  const run = async () => {
+    const r = await api('requestOtp', { email });
+    if (r.success) {
+      document.getElementById('otpEmailLabel').textContent = email;
+      setMsg('otpMsg', null, '');
+      showScreen('otp');
+    } else {
+      setMsg('loginMsg', r.code, r.message);
+      setMsg('otpMsg', r.code, r.message);
+    }
+  };
+  if (btn) {
+    await withLoading(btn, currentLang === 'ar' ? 'جارٍ الإرسال...' : 'Sending...', run);
   } else {
-    setMsg('loginMsg', r.code, r.message);
+    await run();
   }
 }
 
-async function verifyOtp() {
+async function verifyOtp(btn) {
   const otp = document.getElementById('otpCode').value.trim();
-  const r = await api('verifyOtp', { email: pendingEmailForOtp, otp });
-  if (r.success) {
-    session = { token: r.token, fullName: r.fullName, email: r.email };
-    sessionStorage.setItem('token', r.token);
-    sessionStorage.setItem('fullName', r.fullName);
-    sessionStorage.setItem('email', r.email);
-    enterForm();
-  } else {
-    setMsg('otpMsg', r.code, r.message);
-  }
+  await withLoading(btn, currentLang === 'ar' ? 'جارٍ التحقق...' : 'Verifying...', async () => {
+    const r = await api('verifyOtp', { email: pendingEmailForOtp, otp });
+    if (r.success) {
+      session = { token: r.token, fullName: r.fullName, email: r.email };
+      sessionStorage.setItem('token', r.token);
+      sessionStorage.setItem('fullName', r.fullName);
+      sessionStorage.setItem('email', r.email);
+      enterForm();
+    } else {
+      setMsg('otpMsg', r.code, r.message);
+    }
+  });
 }
 
 function logout() {
@@ -572,17 +616,19 @@ function collectFormData() {
   return data;
 }
 
-async function submitForm() {
+async function submitForm(btn) {
   setMsg('formMsg', null, '');
   const formData = collectFormData();
   const signature = document.getElementById('sigPad').toDataURL('image/png');
-  const r = await api('submitForm', { token: session.token, formData, signature });
-  if (r.success) {
-    setMsg('formMsg', r.code, r.message, true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  } else {
-    setMsg('formMsg', r.code, r.message, false);
-  }
+  await withLoading(btn, currentLang === 'ar' ? 'جارٍ الحفظ...' : 'Saving...', async () => {
+    const r = await api('submitForm', { token: session.token, formData, signature });
+    if (r.success) {
+      setMsg('formMsg', r.code, r.message, true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      setMsg('formMsg', r.code, r.message, false);
+    }
+  });
 }
 </script>
 
