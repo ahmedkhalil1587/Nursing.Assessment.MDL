@@ -118,7 +118,7 @@
     <img src="Madlouh_Logo.png" alt="Madlouh Med">
     <img src="CBAHI.png" alt="CBAHI">
     <h1><span data-en="Initial Nursing Assessment System" data-ar="نظام التقييم التمريضي الأولي">نظام التقييم التمريضي الأولي</span><br>
-      <span style="font-weight:400;font-size:12px;" data-en="Madlouh Medical Group" data-ar="مجمع المدلوح الطبي">مجمع المدلوح الطبي</span></h1>
+      <span style="font-weight:400;font-size:12px;" data-en="Madlouh Medical Complex" data-ar="مجمع المدلوح الطبي">مجمع المدلوح الطبي</span></h1>
   </div>
   <div style="display:flex; align-items:center; gap:10px;">
     <button class="langToggle" id="langBtn" onclick="toggleLang()">English</button>
@@ -431,19 +431,29 @@ function toggleLang() {
 }
 
 /* =====================  STATE  ===================== */
-let session = { token: sessionStorage.getItem('token') || '', fullName: sessionStorage.getItem('fullName') || '', email: sessionStorage.getItem('email') || '', role: sessionStorage.getItem('role') || '' };
+let session = { token: localStorage.getItem('token') || '', fullName: localStorage.getItem('fullName') || '', email: localStorage.getItem('email') || '', role: localStorage.getItem('role') || '' };
 let pendingEmailForOtp = '';
 
 /* =====================  API HELPER  ===================== */
-// NOTE: we use XMLHttpRequest instead of fetch() on purpose. Apps Script Web
-// App URLs (/exec) respond via an internal redirect, and fetch() converts a
-// POST into a GET on that redirect (per spec), silently dropping the JSON
-// body. XMLHttpRequest keeps the POST method and body across that redirect,
-// which is required for this to work reliably.
-//
-// Apps Script's redirect target (the "echo?...") occasionally 404s on the
-// very first hit — a known, transient quirk, not a code bug. We retry a
-// couple of times with a short delay before giving up.
+// Every action except submitForm is a plain GET with fetch() — exactly like
+// the reference app. GET is what's reliable here; POST to an Apps Script
+// /exec URL can get silently downgraded (and lose its body) on the internal
+// redirect Google issues, which is what was causing verifyOtp to hang/fail.
+// submitForm alone carries a signature image too big for a URL, so it stays
+// POST via XMLHttpRequest (the one method that preserves POST + body across
+// that redirect).
+async function apiGet(action, payload) {
+  const params = new URLSearchParams(Object.assign({ action }, payload || {}));
+  try {
+    const res = await fetch(`${API_URL}?${params.toString()}`);
+    return await res.json();
+  } catch (e) {
+    return { success: false, code: 'network_error', message: currentLang === 'ar'
+      ? 'تعذر الاتصال بالإنترنت أو بالخادم. حاول مرة أخرى.'
+      : 'Could not reach the network or server. Please try again.' };
+  }
+}
+
 function xhrPostOnce(url, bodyText) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
@@ -461,30 +471,12 @@ function xhrPostOnce(url, bodyText) {
   });
 }
 
-function wait(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
-
-async function xhrPost(url, bodyText, retries = 2) {
-  let lastErr;
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    try {
-      return await xhrPostOnce(url, bodyText);
-    } catch (err) {
-      lastErr = err;
-      if (attempt < retries) await wait(500 * (attempt + 1));
-    }
-  }
-  throw lastErr;
-}
-
-async function api(action, payload) {
+async function apiPost(action, payload) {
   try {
-    const text = await xhrPost(API_URL, JSON.stringify(Object.assign({ action }, payload || {})));
+    const text = await xhrPostOnce(API_URL, JSON.stringify(Object.assign({ action }, payload || {})));
     try {
       return JSON.parse(text);
     } catch (parseErr) {
-      // The server did not return JSON (e.g. a Google login/consent page).
-      // This almost always means the Apps Script deployment's "Who has
-      // access" is not set to "Anyone".
       return { success: false, code: 'bad_response', message: currentLang === 'ar'
         ? 'تعذر الاتصال بالخادم بشكل صحيح. تأكد أن إعداد الوصول في الديبلويمنت هو Anyone.'
         : 'Could not reach the server correctly. Check the deployment access is set to Anyone.' };
@@ -494,6 +486,10 @@ async function api(action, payload) {
       ? 'تعذر الاتصال بالإنترنت أو بالخادم. حاول مرة أخرى.'
       : 'Could not reach the network or server. Please try again.' };
   }
+}
+
+async function api(action, payload) {
+  return action === 'submitForm' ? apiPost(action, payload) : apiGet(action, payload);
 }
 
 // Disables a button and swaps its text to a loading label while an async
@@ -567,10 +563,10 @@ async function verifyOtp(btn) {
     const r = await api('verifyOtp', { email: pendingEmailForOtp, otp });
     if (r.success) {
       session = { token: r.token, fullName: r.fullName, email: r.email, role: r.role || '' };
-      sessionStorage.setItem('token', r.token);
-      sessionStorage.setItem('fullName', r.fullName);
-      sessionStorage.setItem('email', r.email);
-      sessionStorage.setItem('role', r.role || '');
+      localStorage.setItem('token', r.token);
+      localStorage.setItem('fullName', r.fullName);
+      localStorage.setItem('email', r.email);
+      localStorage.setItem('role', r.role || '');
       enterForm();
     } else {
       setMsg('otpMsg', r.code, r.message);
@@ -579,7 +575,10 @@ async function verifyOtp(btn) {
 }
 
 function logout() {
-  sessionStorage.clear();
+  localStorage.removeItem('token');
+  localStorage.removeItem('fullName');
+  localStorage.removeItem('email');
+  localStorage.removeItem('role');
   session = { token: '', fullName: '', email: '', role: '' };
   showScreen('login');
 }

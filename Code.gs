@@ -18,8 +18,8 @@ const SHEET_USERS       = 'Users';
 const SHEET_SUBMISSIONS = 'Submissions';
 const OTP_TTL_MINUTES    = 5;
 const SESSION_TTL_HOURS  = 12;
-const ADMIN_EMAIL        = 'it@madlouh.com.sa';
-const SENDER_NAME        = 'Madlouh Medical Group - نظام التمريض';
+const ADMIN_EMAIL        = 'it.madlouh@gmail.com';
+const SENDER_NAME        = 'Madlouh Medical Complex';
 
 // Leave blank to auto-create/find a Drive folder named below the first time
 // a signature is saved. Or paste a specific Drive folder ID to force it.
@@ -36,16 +36,26 @@ function doPost(e) {
 }
 
 function handle(e) {
-  var action = (e.parameter && e.parameter.action) || '';
+  var params = (e && e.parameter) || {};
+  var action = params.action || '';
   var body = {};
-  try {
-    if (e.postData && e.postData.contents) {
+
+  // submitForm is the only action sent as POST (it carries a large signature
+  // image, which does not fit in a URL). Every other action is sent as a
+  // plain GET with query parameters — GET requests are not affected by the
+  // "POST becomes GET on redirect, body is lost" issue that some browsers /
+  // proxies apply to Apps Script's internal redirect, so this is the most
+  // reliable way to call this web app for small payloads.
+  if (e && e.postData && e.postData.contents) {
+    try {
       body = JSON.parse(e.postData.contents);
+    } catch (err) {
+      return json({ success: false, code: 'bad_request', message: 'Invalid JSON body' });
     }
-  } catch (err) {
-    return json({ success: false, code: 'bad_request', message: 'Invalid JSON body' });
+    if (!action) action = body.action || '';
+  } else {
+    body = params;
   }
-  if (!action) action = body.action || '';
 
   // Read-only actions do not need the script lock — locking them only adds
   // latency and can make them wait behind unrelated write operations.
