@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام التقييم التمريضي - مجمع المدلوح الطبي</title>
+<style>
+  :root{
+    --purple: #3B1E70;
+    --purple-dark: #241147;
+    --purple-light: #6A4BAE;
+    --gold: #C9A227;
+    --gold-light: #E4C34F;
+    --bg: #F2F1F8;
+    --card: #FFFFFF;
+    --text: #241147;
+    --muted: #6b6480;
+    --danger: #C0392B;
+    --success: #1E8449;
+    --radius: 14px;
+    --shadow: 0 6px 24px rgba(59,30,112,0.12);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:'Segoe UI', Tahoma, Arial, sans-serif;
+    background: linear-gradient(180deg, var(--bg) 0%, #e7e4f5 100%);
+    color: var(--text); min-height:100vh;
+  }
+  header.topbar{
+    background: linear-gradient(90deg, var(--purple) 0%, var(--purple-light) 100%);
+    color:#fff; padding:14px 20px; display:flex; align-items:center; justify-content:space-between;
+    box-shadow: var(--shadow); flex-wrap:wrap; gap:10px;
+  }
+  header.topbar .brand{display:flex; align-items:center; gap:12px;}
+  header.topbar img{height:46px; background:#fff; border-radius:8px; padding:4px;}
+  header.topbar img.logo-madlouh{height:64px;}
+  header.topbar h1{font-size:16px; margin:0; font-weight:600;}
+  header.topbar .userbox{font-size:13px; display:flex; align-items:center; gap:10px;}
+  nav.tabbar{
+    background:#fff; display:flex; justify-content:flex-end; gap:6px; padding:10px 20px;
+    box-shadow: 0 2px 8px rgba(59,30,112,0.08); flex-wrap:wrap; position:sticky; top:0; z-index:5;
+  }
+  nav.tabbar .tab-btn{
+    background:transparent; border:none; padding:10px 18px; border-radius:10px; cursor:pointer;
+    font-weight:600; color:var(--muted); font-size:14px; transition:.15s;
+  }
+  nav.tabbar .tab-btn:hover{background:#f2f1f8;}
+  nav.tabbar .tab-btn.active{background:var(--purple); color:#fff;}
+  header.topbar button.logout{
+    background:var(--gold); color:var(--purple-dark); border:none; padding:6px 12px;
+    border-radius:8px; cursor:pointer; font-weight:600; font-size:12px;
+  }
+  button.langToggle{
+    background:rgba(255,255,255,0.18); color:#fff; border:1px solid rgba(255,255,255,0.5);
+    padding:6px 14px; border-radius:20px; cursor:pointer; font-weight:600; font-size:12px;
+  }
+  button.langToggle:hover{background:rgba(255,255,255,0.3);}
+  main{max-width:900px; margin:0 auto; padding:20px 14px 60px;}
+  .card{
+    background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow);
+    padding:24px; margin-bottom:18px;
+  }
+  .card h2{margin-top:0; color:var(--purple); font-size:18px; border-bottom:2px solid var(--gold-light); padding-bottom:8px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:13px; margin-bottom:5px; color:var(--muted); font-weight:600;}
+  .field input[type=text], .field input[type=email], .field input[type=number], .field input[type=tel], .field select, .field textarea{
+    width:100%; padding:10px 12px; border:1px solid #d8d3ea; border-radius:10px; font-size:14px;
+    background:#fbfaff;
+  }
+  .field textarea{min-height:70px; resize:vertical;}
+  .btn{
+    background:var(--purple); color:#fff; border:none; padding:12px 22px; border-radius:10px;
+    font-size:15px; font-weight:600; cursor:pointer; transition:.15s;
+  }
+  .btn:hover{background:var(--purple-dark);}
+  .btn.gold{background:var(--gold); color:var(--purple-dark);}
+  .btn.gold:hover{background:var(--gold-light);}
+  .btn.block{width:100%;}
+  .btn:disabled{opacity:.6; cursor:not-allowed;}
+  .msg{padding:10px 14px; border-radius:10px; font-size:13px; margin-bottom:14px;}
+  .msg.error{background:#fdecea; color:var(--danger); border:1px solid #f5c6c0;}
+  .msg.ok{background:#e9f7ef; color:var(--success); border:1px solid #b7e4c7;}
+  .link-btn{background:none; border:none; color:var(--purple); text-decoration:underline; cursor:pointer; font-size:13px;}
+  .yn-group{display:flex; gap:0; border-radius:10px; overflow:hidden; border:1px solid #d8d3ea; width:fit-content;}
+  .yn-group button{
+    border:none; padding:9px 20px; cursor:pointer; font-size:13px; background:#fbfaff; color:var(--text);
+  }
+  .yn-group button.active-yes{background:var(--purple); color:#fff;}
+  .yn-group button.active-no{background:#e2e0ee; color:var(--purple-dark); font-weight:700;}
+  .row-q{display:flex; align-items:center; justify-content:space-between; gap:14px; padding:9px 0; border-bottom:1px dashed #e3e0f0; flex-wrap:wrap;}
+  .row-q .qtext{font-size:14px; flex:1; min-width:220px;}
+  .section-title{
+    background: linear-gradient(90deg, var(--gold-light), var(--gold));
+    color:var(--purple-dark); font-weight:700; padding:8px 14px; border-radius:8px; margin:18px 0 10px; font-size:14px;
+  }
+  .chk-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:8px; margin:10px 0;}
+  .chk-grid label{display:flex; align-items:center; gap:6px; font-size:13px; background:#fbfaff; padding:7px 10px; border-radius:8px; border:1px solid #e3e0f0;}
+  .choice-grid{display:flex; flex-wrap:wrap; gap:8px; margin:8px 0;}
+  .choice-grid button{
+    border:1px solid #d8d3ea; background:#fbfaff; padding:8px 16px; border-radius:20px; font-size:13px; cursor:pointer;
+  }
+  .choice-grid button.selected{background:var(--purple); color:#fff; border-color:var(--purple);}
+  .two-col{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  @media (max-width:600px){ .two-col{grid-template-columns:1fr;} }
+  canvas#sigPad{
+    border:2px dashed #c9c3e6; border-radius:10px; width:100%; height:180px; touch-action:none; background:#fff;
+  }
+  .sig-actions{display:flex; gap:10px; margin-top:8px;}
+  .hidden{display:none !important;}
+  .center{text-align:center;}
+  .small-muted{font-size:12px; color:var(--muted);}
+  .otp-input{letter-spacing:8px; font-size:22px; text-align:center;}
+  .admin-user-row{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    padding:12px 14px; border:1px solid #e3e0f0; border-radius:10px; margin-bottom:10px; background:#fbfaff;
+  }
+  .admin-user-row .au-info{display:flex; flex-direction:column; gap:4px; font-size:14px;}
+  .admin-user-row .au-actions{display:flex; gap:8px; flex-wrap:wrap;}
+  .badge{display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700; width:fit-content;}
+  .badge.status-ok{background:#e9f7ef; color:var(--success);}
+  .badge.status-pending{background:#fff6dc; color:#8a6d00;}
+  .badge.status-off{background:#fdecea; color:var(--danger);}
+  .stats-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:18px; margin-top:12px;}
+  .stat-item{background:#fbfaff; border:1px solid #e3e0f0; border-radius:12px; padding:14px;}
+  .stat-item h3{font-size:12.5px; margin:0 0 10px; color:var(--muted); text-align:center; font-weight:700; min-height:32px;}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <img src="Madlouh_Logo.png" alt="Madlouh Med" class="logo-madlouh">
+    <img src="CBAHI.png" alt="CBAHI">
+    <h1><span data-en="Initial Nursing Assessment System" data-ar="نظام التقييم التمريضي الأولي">نظام التقييم التمريضي الأولي</span><br>
+      <span style="font-weight:400;font-size:12px;" data-en="Madlouh Medical Complex" data-ar="مجمع المدلوح الطبي">مجمع المدلوح الطبي</span></h1>
+  </div>
+  <div style="display:flex; align-items:center; gap:10px;">
+    <button class="langToggle" id="langBtn" onclick="toggleLang()">English</button>
+    <div class="userbox hidden" id="userbox">
+      <span id="userName"></span>
+      <button class="logout" onclick="logout()" data-en="Logout" data-ar="تسجيل الخروج">تسجيل الخروج</button>
+    </div>
+  </div>
+</header>
+
+<nav class="tabbar hidden" id="tabbar">
+  <button class="tab-btn" data-tab="form" onclick="switchTab('form')" data-en="New Assessment" data-ar="تسجيل بيانات">تسجيل بيانات</button>
+  <button class="tab-btn" data-tab="downloads" onclick="switchTab('downloads')" data-en="Download Data" data-ar="تحميل البيانات">تحميل البيانات</button>
+  <button class="tab-btn" data-tab="dashboard" onclick="switchTab('dashboard')" data-en="Dashboard" data-ar="لوحة الإحصائيات">لوحة الإحصائيات</button>
+  <button class="tab-btn" id="adminTabBtn" data-tab="admin" onclick="switchTab('admin')" style="display:none;" data-en="Admin Panel" data-ar="لوحة الإدارة">لوحة الإدارة</button>
+</nav>
+
+<main>
+
+  <!-- LOGIN -->
+  <section class="card" id="screen-login">
+    <h2 data-en="Login" data-ar="تسجيل الدخول">تسجيل الدخول</h2>
+    <div id="loginMsg"></div>
+    <div class="field">
+      <label data-en="Email" data-ar="البريد الإلكتروني">البريد الإلكتروني</label>
+      <input type="email" id="loginEmail" placeholder="example@madlouh.com.sa">
+    </div>
+    <button class="btn block" onclick="requestOtp(this)" data-en="Send Login Code (OTP)" data-ar="إرسال رمز الدخول (OTP)">إرسال رمز الدخول (OTP)</button>
+    <p class="center" style="margin-top:14px;">
+      <span data-en="Don't have an account?" data-ar="ليس لديك حساب؟">ليس لديك حساب؟</span>
+      <button class="link-btn" onclick="showScreen('register')" data-en="Create new account" data-ar="تسجيل حساب جديد">تسجيل حساب جديد</button>
+    </p>
+  </section>
+
+  <!-- REGISTER -->
+  <section class="card hidden" id="screen-register">
+    <h2 data-en="Create New Account" data-ar="تسجيل حساب جديد">تسجيل حساب جديد</h2>
+    <div id="registerMsg"></div>
+    <div class="field">
+      <label data-en="Full Name" data-ar="الاسم الكامل">الاسم الكامل</label>
+      <input type="text" id="regName">
+    </div>
+    <div class="field">
+      <label data-en="Email" data-ar="البريد الإلكتروني">البريد الإلكتروني</label>
+      <input type="email" id="regEmail">
+    </div>
+    <button class="btn block" onclick="registerUser(this)" data-en="Submit registration request" data-ar="إرسال طلب التسجيل">إرسال طلب التسجيل</button>
+    <p class="center" style="margin-top:14px;">
+      <button class="link-btn" onclick="showScreen('login')" data-en="Back to login" data-ar="عودة لتسجيل الدخول">عودة لتسجيل الدخول</button>
+    </p>
+  </section>
+
+  <!-- OTP -->
+  <section class="card hidden" id="screen-otp">
+    <h2 data-en="Enter Login Code" data-ar="أدخل رمز الدخول">أدخل رمز الدخول</h2>
+    <p class="small-muted">
+      <span data-en="A 6-digit code was sent to" data-ar="تم إرسال رمز مكوّن من 6 أرقام إلى">تم إرسال رمز مكوّن من 6 أرقام إلى</span>
+      <span id="otpEmailLabel"></span>
+    </p>
+    <div id="otpMsg"></div>
+    <div class="field">
+      <input type="text" maxlength="6" id="otpCode" class="otp-input" placeholder="------">
+    </div>
+    <button class="btn block" onclick="verifyOtp(this)" data-en="Confirm login" data-ar="تأكيد الدخول">تأكيد الدخول</button>
+    <p class="center" style="margin-top:14px;">
+      <button class="link-btn" onclick="requestOtp(this)" data-en="Resend code" data-ar="إعادة إرسال الرمز">إعادة إرسال الرمز</button>
+    </p>
+  </section>
+
+  <!-- ADMIN PANEL -->
+  <section class="card hidden" id="screen-admin">
+    <h2 data-en="Admin Panel - User Accounts" data-ar="لوحة الإدارة - حسابات المستخدمين">لوحة الإدارة - حسابات المستخدمين</h2>
+    <div id="adminMsg"></div>
+    <div id="adminUsersList"></div>
+    <p class="center" style="margin-top:14px;">
+      <button class="link-btn" onclick="switchTab('form')" data-en="Back to form" data-ar="عودة للفورم">عودة للفورم</button>
+    </p>
+  </section>
+
+  <!-- DOWNLOADS -->
+  <section class="card hidden" id="screen-downloads">
+    <h2 data-en="Download Recorded Data" data-ar="تحميل البيانات المسجلة">تحميل البيانات المسجلة</h2>
+    <div id="downloadMsg"></div>
+    <p class="small-muted" data-en="Downloads every assessment recorded so far as an Excel file." data-ar="تحميل كل نماذج التقييم المسجلة حتى الآن في ملف إكسيل واحد.">تحميل كل نماذج التقييم المسجلة حتى الآن في ملف إكسيل واحد.</p>
+    <button class="btn block" onclick="downloadSubmissions(this)" data-en="Download as Excel" data-ar="تحميل كملف إكسيل">تحميل كملف إكسيل</button>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section class="hidden" id="screen-dashboard">
+    <div class="card">
+      <h2 data-en="Statistics Dashboard" data-ar="لوحة الإحصائيات">لوحة الإحصائيات</h2>
+      <div id="dashboardMsg"></div>
+      <p><span data-en="Total submissions:" data-ar="إجمالي النماذج المسجلة:">إجمالي النماذج المسجلة:</span> <strong id="statTotal">0</strong></p>
+    </div>
+    <div id="dashboardCharts"></div>
+  </section>
+
+  <!-- NURSING FORM -->
+  <section class="hidden" id="screen-form">
+
+    <div class="card">
+      <h2 data-en="Triage Screening for Early Recognition of Communicable Diseases" data-ar="فحص الفرز المبكر للأمراض المعدية">Triage Screening for Early Recognition of Communicable Diseases</h2>
+      <div id="formMsg"></div>
+      <div class="two-col">
+        <div class="field"><label data-en="File No" data-ar="رقم الملف">File No</label><input type="text" id="FileNo"></div>
+        <div class="field"><label data-en="Patient Name" data-ar="اسم المريض">Patient Name</label><input type="text" id="PatientName"></div>
+      </div>
+
+      <div class="row-q"><div class="qtext" data-en="1. Have you had fever (elevated temperature)?" data-ar="1. هل شعرت بارتفاع في درجة الحرارة (حمى)؟">1. Have you had fever (elevated temperature)?</div><div class="yn-group" data-field="Fever"><button data-v="Yes" data-en="Yes" data-ar="نعم">Yes</button><button data-v="No" data-en="No" data-ar="لا">No</button></div></div>
+      <div class="row-q"><div class="qtext" data-en="2. Have you had a rash or unusual skin lesion?" data-ar="2. هل ظهر لديك طفح جلدي أو آفة جلدية غير معتادة؟">2. Have you had a rash or unusual skin lesion?</div><div class="yn-group" data-field="Rash"><button data-v="Yes" data-en="Yes" data-ar="نعم">Yes</button><button data-v="No" data-en="No" data-ar="لا">No</button></div></div>
+      <div class="row-q"><div class="qtext" data-en="3. Have you had cough, shortness of breath or difficulty breathing?" data-ar="3. هل لديك سعال أو ضيق أو صعوبة في التنفس؟">3. Have you had cough, shortness of breath or difficulty breathing?</div><div class="yn-group" data-field="CoughSOB"><button data-v="Yes" data-en="Yes" data-ar="نعم">Yes</button><button data-v="No" data-en="No" data-ar="لا">No</button></div></div>
+
+      <div class="section-title" data-en="For patients reporting fever and respiratory/rash symptoms" data-ar="للمرضى الذين لديهم أعراض حمى / تنفسية / طفح جلدي">للمرضى الذين لديهم أعراض حمى / تنفسية / طفح جلدي</div>
+      <div class="row-q"><div class="qtext" data-en="4. Traveled outside Saudi Arabia or close contact with a traveler?" data-ar="4. هل سافرت خارج السعودية أو خالطت شخصاً سافر مؤخراً؟">4. Traveled outside Saudi Arabia or close contact with a traveler?</div><div class="yn-group" data-field="TraveledOutsideKSA"><button data-v="Yes" data-en="Yes" data-ar="نعم">Yes</button><button data-v="No" data-en="No" data-ar="لا">No</button></div></div>
+      <div class="field"><label data-en="If yes, when / details" data-ar="إذا كانت الإجابة نعم، متى / التفاصيل">If yes, when / details</label><input type="text" id="TravelWhenDetails"></div>
+      <div class="row-q"><div class="qtext" data-en="5. Are you a healthcare worker with recent exposure?" data-ar="5. هل أنت من العاملين الصحيين وتعرضت مؤخراً؟">5. Are you a healthcare worker with recent exposure?</div><div class="yn-group" data-field="HealthcareWorkerExposure"><button data-v="Yes" data-en="Yes" data-ar="نعم">Yes</button><button data-v="No" data-en="No" data-ar="لا">No</button></div></div>
+      <div class="row-q"><div class="qtext" data-en="6. Close contacts with similar symptoms?" data-ar="6. هل لدى مخالطيك أعراض مشابهة؟">6. Close contacts with similar symptoms?</div><div class="yn-group" data-field="CloseContactSimilarSymptoms"><button data-v="Yes" data-en="Yes" data-ar="نعم">Yes</button><button data-v="No" data-en="No" data-ar="لا">No</button></div></div>
+
+      <div class="section-title" data-en="Actions (if positive screen)" data-ar="الإجراءات (في حال وجود فحص إيجابي)">Actions (if positive screen)</div>
+      <div class="chk-grid">
+        <label><input type="checkbox" id="ActionSurgicalMask"> <span data-en="Give surgical mask immediately" data-ar="إعطاء كمامة جراحية فوراً">Give surgical mask immediately</span></label>
+        <label><input type="checkbox" id="ActionIsolationRoom"> <span data-en="Priority individual isolation room" data-ar="أولوية لغرفة عزل فردية">Priority individual isolation room</span></label>
+        <label><input type="checkbox" id="ActionWaitingAreaSeparation"> <span data-en="3 feet separation in waiting area" data-ar="مسافة فصل 3 أقدام في منطقة الانتظار">3 feet separation in waiting area</span></label>
+        <label><input type="checkbox" id="ActionHandHygiene"> <span data-en="Hand hygiene (patient & staff)" data-ar="نظافة اليدين (المريض والطاقم)">Hand hygiene (patient &amp; staff)</span></label>
+        <label><input type="checkbox" id="ActionPrivateRoom"> <span data-en="Private room pending evaluation" data-ar="غرفة خاصة بانتظار التقييم">Private room pending evaluation</span></label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 data-en="General Information" data-ar="معلومات عامة">General Information</h2>
+      <div class="row-q"><div class="qtext" data-en="Received from" data-ar="تم الاستقبال من">Received from</div><div class="yn-group" data-field="ReceivedFrom"><button data-v="Yes" data-en="Yes" data-ar="نعم">Yes</button><button data-v="No" data-en="No" data-ar="لا">No</button></div></div>
+      <div class="row-q"><div class="qtext" data-en="First Visit" data-ar="زيارة أولى">First Visit</div><div class="yn-group" data-field="FirstVisit"><button data-v="Yes" data-en="Yes" data-ar="نعم">Yes</button><button data-v="No" data-en="No" data-ar="لا">No</button></div></div>
+
+      <div class="field"><label data-en="Language spoken" data-ar="اللغة المتحدثة">Language spoken</label>
+        <div class="choice-grid" data-field="LanguageSpoken">
+          <button data-v="Arabic" data-en="Arabic" data-ar="عربي">Arabic</button><button data-v="English" data-en="English" data-ar="إنجليزي">English</button><button data-v="Other" data-en="Other" data-ar="أخرى">Other</button>
+        </div>
+      </div>
+      <div class="field"><label data-en="History taken from" data-ar="تم أخذ التاريخ المرضي من">History taken from</label>
+        <div class="choice-grid" data-field="HistoryTakenFrom">
+          <button data-v="Parent" data-en="Parent" data-ar="ولي الأمر">Parent</button><button data-v="Relatives" data-en="Relatives" data-ar="الأقارب">Relatives</button><button data-v="Other" data-en="Other" data-ar="أخرى">Other</button>
+        </div>
+      </div>
+      <div class="field"><label data-en="Allergies" data-ar="الحساسية">Allergies</label>
+        <div class="choice-grid" data-field="Allergies">
+          <button data-v="Yes" data-en="Yes" data-ar="نعم">Yes</button><button data-v="No Known Allergies" data-en="No Known Allergies" data-ar="لا توجد حساسية معروفة">No Known Allergies</button>
+        </div>
+      </div>
+
+      <div class="field"><label data-en="Mode of access" data-ar="طريقة الوصول">Mode of access</label>
+        <div class="choice-grid" data-field="ModeOfAccess">
+          <button data-v="Ambulatory" data-en="Ambulatory" data-ar="سائر على قدميه">Ambulatory</button><button data-v="Wheelchair" data-en="Wheelchair" data-ar="كرسي متحرك">Wheelchair</button><button data-v="Other" data-en="Other" data-ar="أخرى">Other</button>
+        </div>
+      </div>
+      <div class="field"><label data-en="Reason for visit" data-ar="سبب الزيارة">Reason for visit</label>
+        <div class="choice-grid" data-field="ReasonForVisit">
+          <button data-v="Treatment" data-en="Treatment" data-ar="علاج">Treatment</button><button data-v="Consultation" data-en="Consultation" data-ar="استشارة">Consultation</button><button data-v="Other" data-en="Other" data-ar="أخرى">Other</button>
+        </div>
+      </div>
+      <div class="field"><label data-en="Accompanied by" data-ar="برفقة">Accompanied by</label>
+        <div class="choice-grid" data-field="Accompanied">
+          <button data-v="Parent" data-en="Parent" data-ar="ولي الأمر">Parent</button><button data-v="Relatives" data-en="Relatives" data-ar="الأقارب">Relatives</button><button data-v="Other" data-en="Other" data-ar="أخرى">Other</button>
+        </div>
+      </div>
+      <div class="row-q"><div class="qtext" data-en="Interpreter needed?" data-ar="هل يحتاج إلى مترجم؟">Interpreter needed?</div><div class="yn-group" data-field="InterpreterNeed"><button data-v="Yes" data-en="Yes" data-ar="نعم">Yes</button><button data-v="No" data-en="No" data-ar="لا">No</button></div></div>
+      <div class="field"><label data-en="Diet" data-ar="النظام الغذائي">Diet</label>
+        <div class="choice-grid" data-field="Diet">
+          <button data-v="Regular" data-en="Regular" data-ar="عادي">Regular</button><button data-v="Others" data-en="Others" data-ar="أخرى">Others</button>
+        </div>
+      </div>
+      <div class="row-q"><div class="qtext" data-en="Transportation" data-ar="وسيلة النقل">Transportation</div><div class="yn-group" data-field="Transportation"><button data-v="Yes" data-en="Yes" data-ar="نعم">Yes</button><button data-v="No" data-en="No" data-ar="لا">No</button></div></div>
+    </div>
+
+    <div class="card">
+      <h2 data-en="Initial Nursing Assessment" data-ar="التقييم التمريضي الأولي">Initial Nursing Assessment</h2>
+      <div class="field"><label data-en="Chief Complaint" data-ar="الشكوى الرئيسية">Chief Complaint</label><textarea id="ChiefComplaint"></textarea></div>
+      <div class="two-col">
+        <div class="field"><label data-en="Temp (°C)" data-ar="الحرارة (°C)">Temp (°C)</label><input type="number" step="0.1" id="Temp"></div>
+        <div class="field"><label data-en="Temp method" data-ar="طريقة القياس">Temp method</label>
+          <div class="choice-grid" data-field="TempMethod">
+            <button data-v="Axillary" data-en="Axillary" data-ar="تحت الإبط">Axillary</button><button data-v="Tympanic" data-en="Tympanic" data-ar="عن طريق الأذن">Tympanic</button><button data-v="Orally" data-en="Orally" data-ar="عن طريق الفم">Orally</button>
+          </div>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="field"><label data-en="BP Systolic" data-ar="الضغط الانقباضي">BP Systolic</label><input type="number" id="BPSystolic"></div>
+        <div class="field"><label data-en="BP Diastolic" data-ar="الضغط الانبساطي">BP Diastolic</label><input type="number" id="BPDiastolic"></div>
+      </div>
+      <div class="two-col">
+        <div class="field"><label data-en="Pulse (beats/min)" data-ar="النبض (نبضة/دقيقة)">Pulse (beats/min)</label><input type="number" id="Pulse"></div>
+        <div class="field"><label data-en="RR (beats/min)" data-ar="التنفس (نفس/دقيقة)">RR (beats/min)</label><input type="number" id="RR"></div>
+      </div>
+      <div class="two-col">
+        <div class="field"><label data-en="Height (cm)" data-ar="الطول (سم)">Height (cm)</label><input type="number" id="Height"></div>
+        <div class="field"><label data-en="Weight (kg)" data-ar="الوزن (كجم)">Weight (kg)</label><input type="number" id="Weight"></div>
+      </div>
+      <div class="field"><label data-en="Skin" data-ar="الجلد">Skin</label>
+        <div class="choice-grid" data-field="Skin">
+          <button data-v="Normal" data-en="Normal" data-ar="طبيعي">Normal</button><button data-v="Cold" data-en="Cold" data-ar="بارد">Cold</button><button data-v="Cyanotic" data-en="Cyanotic" data-ar="مزرقّ">Cyanotic</button><button data-v="Other" data-en="Other" data-ar="أخرى">Other</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 data-en="Nutritional / Functional / Psychological / Social / Pain Screening" data-ar="الفحص الغذائي / الوظيفي / النفسي / الاجتماعي / الألم">Nutritional / Functional / Psychological / Social / Pain Screening</h2>
+      <div class="row-q"><div class="qtext" data-en="Nutritional screen: unintentional weight change in past 6 months?" data-ar="الفحص الغذائي: هل حدث تغيّر غير مقصود في الوزن خلال 6 أشهر؟">Nutritional screen: unintentional weight change in past 6 months?</div><div class="yn-group" data-field="WeightChangePast6Months"><button data-v="Yes" data-en="Yes" data-ar="نعم">Yes</button><button data-v="No" data-en="No" data-ar="لا">No</button></div></div>
+
+      <div class="field"><label data-en="Functional screen" data-ar="الفحص الوظيفي">Functional screen</label>
+        <div class="choice-grid" data-field="FunctionalStatus">
+          <button data-v="Independent" data-en="Independent" data-ar="مستقل">Independent</button><button data-v="Need assist" data-en="Need assist" data-ar="يحتاج مساعدة">Need assist</button><button data-v="Dependent" data-en="Dependent" data-ar="معتمد على الغير">Dependent</button>
+        </div>
+      </div>
+      <div class="field"><label data-en="Recent changes in ability to care for self" data-ar="تغيّرات حديثة في القدرة على رعاية النفس">Recent changes in ability to care for self</label><input type="text" id="RecentCareChanges"></div>
+
+      <div class="field"><label data-en="Psychological" data-ar="الحالة النفسية">Psychological</label>
+        <div class="choice-grid" data-field="PsychologicalStatus">
+          <button data-v="Oriented" data-en="Oriented" data-ar="واعٍ">Oriented</button><button data-v="Confused" data-en="Confused" data-ar="مرتبك">Confused</button><button data-v="Cooperative" data-en="Cooperative" data-ar="متعاون">Cooperative</button><button data-v="Uncooperative" data-en="Uncooperative" data-ar="غير متعاون">Uncooperative</button><button data-v="Other" data-en="Other" data-ar="أخرى">Other</button>
+        </div>
+      </div>
+
+      <div class="chk-grid">
+        <label><input type="checkbox" id="LiveAlone"> <span data-en="Live alone" data-ar="يعيش بمفرده">Live alone</span></label>
+        <label><input type="checkbox" id="CareGiverAvailable"> <span data-en="Care giver available" data-ar="يوجد مقدم رعاية">Care giver available</span></label>
+      </div>
+
+      <div class="field"><label data-en="Pain Screening" data-ar="فحص الألم">Pain Screening</label>
+        <div class="choice-grid" data-field="PainScreening">
+          <button data-v="No" data-en="No pain" data-ar="لا يوجد ألم">No pain</button><button data-v="Yes - complete pain assessment" data-en="Yes, complete pain assessment" data-ar="نعم، أكمل تقييم الألم">Yes, complete pain assessment</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 data-en="Fall Risk Screening Tool" data-ar="أداة فحص خطر السقوط">Fall Risk Screening Tool</h2>
+      <p class="small-muted" data-en="If the answer to any of the questions is Yes, the patient is considered at risk for fall." data-ar="إذا كانت الإجابة على أي من الأسئلة نعم، يُعتبر المريض معرضاً لخطر السقوط.">If the answer to any of the questions is Yes, the patient is considered at risk for fall.</p>
+      <div class="row-q"><div class="qtext" data-en="Have you had a fall in the past 3 months?" data-ar="هل سقطت خلال الأشهر الثلاثة الماضية؟">Have you had a fall in the past 3 months?</div><div class="yn-group" data-field="FallPast3Months"><button data-v="Yes" data-en="Yes" data-ar="نعم">Yes</button><button data-v="No" data-en="No" data-ar="لا">No</button></div></div>
+      <div class="row-q"><div class="qtext" data-en="Do you have difficulty in walking?" data-ar="هل لديك صعوبة في المشي؟">Do you have difficulty in walking?</div><div class="yn-group" data-field="DifficultyWalking"><button data-v="Yes" data-en="Yes" data-ar="نعم">Yes</button><button data-v="No" data-en="No" data-ar="لا">No</button></div></div>
+      <div class="row-q"><div class="qtext" data-en="Do you use an assistive device (walker, cane, brace)?" data-ar="هل تستخدم جهازاً مساعداً (مشاية، عصا، دعامة)؟">Do you use an assistive device (walker, cane, brace)?</div><div class="yn-group" data-field="UseAssistiveDevice"><button data-v="Yes" data-en="Yes" data-ar="نعم">Yes</button><button data-v="No" data-en="No" data-ar="لا">No</button></div></div>
+      <div class="row-q"><div class="qtext" data-en="Do you receive any of the following medication?" data-ar="هل تتناول أياً من الأدوية التالية؟">Do you receive any of the following medication?</div><div class="yn-group" data-field="ReceiveFallRiskMedication"><button data-v="Yes" data-en="Yes" data-ar="نعم">Yes</button><button data-v="No" data-en="No" data-ar="لا">No</button></div></div>
+
+      <div class="chk-grid" id="fallMedsGrid">
+        <label><input type="checkbox" value="Antihistamines"> <span data-en="Antihistamines" data-ar="مضادات الهيستامين">Antihistamines</span></label>
+        <label><input type="checkbox" value="Antiepileptic"> <span data-en="Antiepileptic" data-ar="مضادات الصرع">Antiepileptic</span></label>
+        <label><input type="checkbox" value="Antihypertensive"> <span data-en="Antihypertensive" data-ar="خافضات الضغط">Antihypertensive</span></label>
+        <label><input type="checkbox" value="Hypnotics"> <span data-en="Hypnotics" data-ar="منومات">Hypnotics</span></label>
+        <label><input type="checkbox" value="Benzodiazepines"> <span data-en="Benzodiazepines" data-ar="بنزوديازيبينات">Benzodiazepines</span></label>
+        <label><input type="checkbox" value="Psychotropics"> <span data-en="Psychotropics" data-ar="مؤثرات نفسية">Psychotropics</span></label>
+        <label><input type="checkbox" value="Narcotics"> <span data-en="Narcotics" data-ar="مخدرات">Narcotics</span></label>
+        <label><input type="checkbox" value="Sedatives"> <span data-en="Sedatives" data-ar="مهدئات">Sedatives</span></label>
+        <label><input type="checkbox" value="Cathartics"> <span data-en="Cathartics" data-ar="ملينات">Cathartics</span></label>
+        <label><input type="checkbox" value="Diuretics"> <span data-en="Diuretics" data-ar="مدرات بول">Diuretics</span></label>
+      </div>
+
+      <div class="field"><label data-en="Fall Risk Score" data-ar="درجة خطر السقوط">Fall Risk Score</label>
+        <div class="choice-grid" data-field="FallRiskScore">
+          <button data-v="No Fall Risk" data-en="No Fall Risk" data-ar="لا يوجد خطر سقوط">No Fall Risk</button><button data-v="At Fall Risk" data-en="At Fall Risk (see interventions)" data-ar="معرّض لخطر السقوط (انظر الإجراءات)">At Fall Risk (see interventions)</button>
+        </div>
+      </div>
+
+      <div class="section-title" data-en="Fall Risk Interventions" data-ar="إجراءات الوقاية من السقوط">Fall Risk Interventions</div>
+      <div class="chk-grid">
+        <label><input type="checkbox" id="InterventionYellowWristband"> <span data-en="Attach yellow Fall Risk wristband" data-ar="تركيب سوار أصفر لخطر السقوط">Attach yellow Fall Risk wristband</span></label>
+        <label><input type="checkbox" id="InterventionDesignatedClinic"> <span data-en="Proceed to designated clinic with companion/nurse" data-ar="التوجه للعيادة المخصصة برفقة مرافق/ممرضة">Proceed to designated clinic with companion/nurse</span></label>
+        <label><input type="checkbox" id="InterventionWheelChair"> <span data-en="Provide wheelchair" data-ar="توفير كرسي متحرك">Provide wheelchair</span></label>
+        <label><input type="checkbox" id="InterventionFallsPamphlet"> <span data-en="Provide Falls Prevention pamphlet" data-ar="تقديم نشرة الوقاية من السقوط">Provide Falls Prevention pamphlet</span></label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 data-en="Patient Electronic Signature" data-ar="توقيع المريض الإلكتروني">توقيع المريض الإلكتروني</h2>
+      <canvas id="sigPad"></canvas>
+      <div class="sig-actions">
+        <button class="btn gold" type="button" onclick="clearSignature()" data-en="Clear signature" data-ar="مسح التوقيع">مسح التوقيع</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 data-en="Confirm & Save" data-ar="تأكيد وحفظ">تأكيد وحفظ</h2>
+      <p><span data-en="Nurse responsible for this form:" data-ar="الممرضة المسؤولة عن تسجيل هذا النموذج:">الممرضة المسؤولة عن تسجيل هذا النموذج:</span> <strong id="nurseNameDisplay"></strong></p>
+      <button class="btn block" onclick="submitForm(this)" data-en="Save form" data-ar="حفظ النموذج">حفظ النموذج</button>
+    </div>
+
+  </section>
+
+</main>
+
+<script>
+/* =====================  CONFIG  ===================== */
+const API_URL = 'https://nursing-assessment-api.madlouh.workers.dev';
+
+/* =====================  LANGUAGE  ===================== */
+let currentLang = localStorage.getItem('lang') || 'ar';
+
+const MESSAGES = {
+  invalid_fields:      { ar: 'يرجى إدخال الاسم والبريد الإلكتروني', en: 'Please enter your name and email' },
+  invalid_email:       { ar: 'صيغة البريد الإلكتروني غير صحيحة', en: 'Invalid email format' },
+  already_registered:  { ar: 'هذا البريد مسجل بالفعل. يرجى تسجيل الدخول أو انتظار موافقة الإدارة.', en: 'This email is already registered. Please log in or wait for admin approval.' },
+  registered_ok:       { ar: 'تم إرسال طلب التسجيل. سيتم تفعيل حسابك من قبل الإدارة قريباً.', en: 'Registration request sent. Your account will be activated by an admin soon.' },
+  email_not_found:     { ar: 'هذا البريد غير مسجل. يرجى إنشاء حساب جديد.', en: 'This email is not registered. Please create a new account.' },
+  pending_approval:    { ar: 'حسابك بانتظار موافقة الإدارة.', en: 'Your account is pending admin approval.' },
+  email_send_failed:   { ar: 'تعذر إرسال البريد الإلكتروني. تواصل مع الإدارة.', en: 'Could not send email. Contact the admin.' },
+  otp_sent:            { ar: 'تم إرسال رمز الدخول إلى بريدك الإلكتروني.', en: 'A login code was sent to your email.' },
+  otp_invalid:         { ar: 'رمز الدخول غير صحيح.', en: 'Invalid login code.' },
+  otp_expired:         { ar: 'انتهت صلاحية الرمز. اطلب رمزاً جديداً.', en: 'Code expired. Please request a new one.' },
+  login_ok:            { ar: 'تم تسجيل الدخول بنجاح.', en: 'Logged in successfully.' },
+  session_expired:     { ar: 'انتهت الجلسة. سجل الدخول مرة أخرى.', en: 'Session expired. Please log in again.' },
+  session_invalid:     { ar: 'جلسة غير صالحة.', en: 'Invalid session.' },
+  must_login:          { ar: 'يجب تسجيل الدخول أولاً.', en: 'You must log in first.' },
+  submit_ok:           { ar: 'تم حفظ النموذج بنجاح.', en: 'Form saved successfully.' },
+  account_disabled:    { ar: 'تم تعطيل هذا الحساب من قبل الإدارة.', en: 'This account has been disabled by an admin.' },
+  not_admin:           { ar: 'غير مصرح لك بالوصول لهذه الصفحة.', en: 'You are not authorized to access this page.' },
+  status_updated:      { ar: 'تم تحديث حالة الحساب.', en: 'Account status updated.' },
+  busy:                { ar: 'النظام مشغول، حاول مرة أخرى.', en: 'System is busy, please try again.' },
+  server_error:        { ar: 'حدث خطأ في الخادم. حاول مرة أخرى.', en: 'A server error occurred. Please try again.' },
+  export_failed:       { ar: 'تعذر تجهيز ملف الإكسيل. حاول مرة أخرى.', en: 'Could not prepare the Excel file. Please try again.' }
+};
+
+function t(code, fallback) {
+  if (code && MESSAGES[code]) return MESSAGES[code][currentLang];
+  return fallback || '';
+}
+
+function applyLang() {
+  document.getElementById('htmlRoot').setAttribute('lang', currentLang);
+  document.getElementById('htmlRoot').setAttribute('dir', currentLang === 'ar' ? 'rtl' : 'ltr');
+  document.querySelectorAll('[data-en]').forEach(el => {
+    el.textContent = currentLang === 'ar' ? el.getAttribute('data-ar') : el.getAttribute('data-en');
+  });
+  document.getElementById('langBtn').textContent = currentLang === 'ar' ? 'English' : 'عربي';
+  localStorage.setItem('lang', currentLang);
+}
+function toggleLang() {
+  currentLang = currentLang === 'ar' ? 'en' : 'ar';
+  applyLang();
+}
+
+/* =====================  STATE  ===================== */
+let session = { token: localStorage.getItem('token') || '', fullName: localStorage.getItem('fullName') || '', email: localStorage.getItem('email') || '', role: localStorage.getItem('role') || '' };
+let pendingEmailForOtp = '';
+
+/* =====================  API HELPER  ===================== */
+// Every action except submitForm is a plain GET with fetch() — exactly like
+// the reference app. GET is what's reliable here; POST to an Apps Script
+// /exec URL can get silently downgraded (and lose its body) on the internal
+// redirect Google issues, which is what was causing verifyOtp to hang/fail.
+// submitForm alone carries a signature image too big for a URL, so it stays
+// POST via XMLHttpRequest (the one method that preserves POST + body across
+// that redirect).
+async function apiGet(action, payload) {
+  const params = new URLSearchParams(Object.assign({ action }, payload || {}));
+  const url = `${API_URL}?${params.toString()}`;
+  // One silent extra attempt if the first hits a transient network hiccup —
+  // simple and invisible unless both attempts fail.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(url);
+      return await res.json();
+    } catch (e) {
+      if (attempt === 1) {
+        return { success: false, code: 'network_error', message: currentLang === 'ar'
+          ? 'تعذر الاتصال بالإنترنت أو بالخادم. حاول مرة أخرى.'
+          : 'Could not reach the network or server. Please try again.' };
+      }
+    }
+  }
+}
+
+function xhrPostOnce(url, bodyText) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url, true);
+    xhr.setRequestHeader('Content-Type', 'text/plain;charset=utf-8');
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(xhr.responseText);
+      } else {
+        reject(new Error('HTTP ' + xhr.status));
+      }
+    };
+    xhr.onerror = () => reject(new Error('Network error'));
+    xhr.send(bodyText);
+  });
+}
+
+async function apiPost(action, payload) {
+  try {
+    const text = await xhrPostOnce(API_URL, JSON.stringify(Object.assign({ action }, payload || {})));
+    try {
+      return JSON.parse(text);
+    } catch (parseErr) {
+      return { success: false, code: 'bad_response', message: currentLang === 'ar'
+        ? 'تعذر الاتصال بالخادم بشكل صحيح. تأكد أن إعداد الوصول في الديبلويمنت هو Anyone.'
+        : 'Could not reach the server correctly. Check the deployment access is set to Anyone.' };
+    }
+  } catch (networkErr) {
+    return { success: false, code: 'network_error', message: currentLang === 'ar'
+      ? 'تعذر الاتصال بالإنترنت أو بالخادم. حاول مرة أخرى.'
+      : 'Could not reach the network or server. Please try again.' };
+  }
+}
+
+async function api(action, payload) {
+  return action === 'submitForm' ? apiPost(action, payload) : apiGet(action, payload);
+}
+
+// Disables a button and swaps its text to a loading label while an async
+// action runs, then restores it — also prevents duplicate/double-click
+// submissions (a common cause of a second OTP overwriting the first).
+async function withLoading(btn, loadingText, fn) {
+  if (btn.disabled) return; // already in-flight, ignore extra clicks
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = loadingText;
+  try {
+    await fn();
+  } finally {
+    btn.disabled = false;
+    btn.textContent = original;
+  }
+}
+
+/* =====================  SCREEN NAV  ===================== */
+const APP_TABS = ['form', 'downloads', 'dashboard', 'admin'];
+
+function showScreen(name) {
+  ['login', 'register', 'otp'].concat(APP_TABS).forEach(s => {
+    document.getElementById('screen-' + s).classList.toggle('hidden', s !== name);
+  });
+  const isAppTab = APP_TABS.includes(name);
+  document.getElementById('userbox').classList.toggle('hidden', !isAppTab);
+  document.getElementById('tabbar').classList.toggle('hidden', !isAppTab);
+}
+
+function switchTab(tab) {
+  showScreen(tab);
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  if (tab === 'admin') loadAdminUsers();
+  if (tab === 'dashboard') loadDashboard();
+}
+
+function setMsg(id, code, fallback, ok) {
+  const el = document.getElementById(id);
+  const text = code ? t(code, fallback) : (fallback || '');
+  el.innerHTML = text ? `<div class="msg ${ok ? 'ok' : 'error'}">${text}</div>` : '';
+}
+
+/* =====================  AUTH  ===================== */
+async function registerUser(btn) {
+  const fullName = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  setMsg('registerMsg', null, '');
+  if (!fullName || !email) { setMsg('registerMsg', 'invalid_fields'); return; }
+  await withLoading(btn, currentLang === 'ar' ? 'جارٍ الإرسال...' : 'Sending...', async () => {
+    const r = await api('register', { fullName, email });
+    setMsg('registerMsg', r.code, r.message, r.success);
+  });
+}
+
+async function requestOtp(btn) {
+  const email = (document.getElementById('loginEmail') ? document.getElementById('loginEmail').value.trim() : pendingEmailForOtp);
+  if (!email) { setMsg('loginMsg', null, currentLang === 'ar' ? 'أدخل البريد الإلكتروني' : 'Enter your email'); return; }
+  pendingEmailForOtp = email;
+  setMsg('loginMsg', null, '');
+  const run = async () => {
+    const r = await api('requestOtp', { email });
+    if (r.success) {
+      document.getElementById('otpEmailLabel').textContent = email;
+      setMsg('otpMsg', null, '');
+      showScreen('otp');
+    } else {
+      setMsg('loginMsg', r.code, r.message);
+      setMsg('otpMsg', r.code, r.message);
+    }
+  };
+  if (btn) {
+    await withLoading(btn, currentLang === 'ar' ? 'جارٍ الإرسال...' : 'Sending...', run);
+  } else {
+    await run();
+  }
+}
+
+async function verifyOtp(btn) {
+  const otp = document.getElementById('otpCode').value.trim();
+  await withLoading(btn, currentLang === 'ar' ? 'جارٍ التحقق...' : 'Verifying...', async () => {
+    const r = await api('verifyOtp', { email: pendingEmailForOtp, otp });
+    if (r.success) {
+      session = { token: r.token, fullName: r.fullName, email: r.email, role: r.role || '' };
+      localStorage.setItem('token', r.token);
+      localStorage.setItem('fullName', r.fullName);
+      localStorage.setItem('email', r.email);
+      localStorage.setItem('role', r.role || '');
+      enterForm();
+    } else {
+      setMsg('otpMsg', r.code, r.message);
+    }
+  });
+}
+
+function logout() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('fullName');
+  localStorage.removeItem('email');
+  localStorage.removeItem('role');
+  session = { token: '', fullName: '', email: '', role: '' };
+  showScreen('login');
+}
+
+async function enterForm() {
+  document.getElementById('userName').textContent = session.fullName;
+  document.getElementById('nurseNameDisplay').textContent = session.fullName;
+  document.getElementById('adminTabBtn').style.display = (session.role === 'Admin') ? 'inline-block' : 'none';
+  switchTab('form');
+  initSignaturePad();
+}
+
+/* =====================  ADMIN PANEL  ===================== */
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str || '';
+  return div.innerHTML;
+}
+
+async function loadAdminUsers() {
+  setMsg('adminMsg', null, '');
+  const listEl = document.getElementById('adminUsersList');
+  listEl.innerHTML = currentLang === 'ar' ? 'جارٍ التحميل...' : 'Loading...';
+
+  const r = await api('listUsers', { token: session.token });
+  if (!r.success) {
+    listEl.innerHTML = '';
+    setMsg('adminMsg', r.code, r.message, false);
+    return;
+  }
+
+  listEl.innerHTML = '';
+  if (!r.users.length) {
+    listEl.innerHTML = `<p class="small-muted">${currentLang === 'ar' ? 'لا يوجد مستخدمون بعد.' : 'No users yet.'}</p>`;
+    return;
+  }
+
+  r.users.forEach(u => {
+    const labels = {
+      Approved: currentLang === 'ar' ? 'مفعّل' : 'Approved',
+      Pending:  currentLang === 'ar' ? 'قيد الانتظار' : 'Pending',
+      Disabled: currentLang === 'ar' ? 'معطّل' : 'Disabled'
+    };
+    const cls = u.status === 'Approved' ? 'status-ok' : (u.status === 'Pending' ? 'status-pending' : 'status-off');
+
+    const row = document.createElement('div');
+    row.className = 'admin-user-row';
+    row.innerHTML = `
+      <div class="au-info">
+        <strong>${escapeHtml(u.fullName)}</strong>
+        <span class="small-muted">${escapeHtml(u.email)} — ${escapeHtml(u.role)}</span>
+        <span class="badge ${cls}">${labels[u.status] || escapeHtml(u.status)}</span>
+      </div>
+      <div class="au-actions"></div>
+    `;
+    const actions = row.querySelector('.au-actions');
+
+    if (u.role !== 'Admin') {
+      if (u.status !== 'Approved') {
+        const approveBtn = document.createElement('button');
+        approveBtn.className = 'btn gold';
+        approveBtn.textContent = currentLang === 'ar' ? 'تفعيل' : 'Approve';
+        approveBtn.onclick = () => changeUserStatus(u.email, 'Approved', approveBtn);
+        actions.appendChild(approveBtn);
+      }
+      if (u.status !== 'Disabled') {
+        const disableBtn = document.createElement('button');
+        disableBtn.className = 'btn';
+        disableBtn.style.background = '#C0392B';
+        disableBtn.textContent = currentLang === 'ar' ? 'تعطيل' : 'Disable';
+        disableBtn.onclick = () => changeUserStatus(u.email, 'Disabled', disableBtn);
+        actions.appendChild(disableBtn);
+      }
+    } else {
+      const note = document.createElement('span');
+      note.className = 'small-muted';
+      note.textContent = currentLang === 'ar' ? 'حساب أدمن' : 'Admin account';
+      actions.appendChild(note);
+    }
+
+    listEl.appendChild(row);
+  });
+}
+
+async function changeUserStatus(email, newStatus, btn) {
+  await withLoading(btn, currentLang === 'ar' ? '...جارٍ الحفظ' : 'Saving...', async () => {
+    const r = await api('setUserStatus', { token: session.token, targetEmail: email, status: newStatus });
+    if (r.success) {
+      loadAdminUsers();
+    } else {
+      setMsg('adminMsg', r.code, r.message, false);
+    }
+  });
+}
+
+/* =====================  DOWNLOADS TAB  ===================== */
+async function downloadSubmissions(btn) {
+  setMsg('downloadMsg', null, '');
+  await withLoading(btn, currentLang === 'ar' ? 'جارٍ التجهيز...' : 'Preparing...', async () => {
+    const r = await api('exportSubmissions', { token: session.token });
+    if (!r.success) {
+      setMsg('downloadMsg', r.code, r.message, false);
+      return;
+    }
+    if (r.empty) {
+      setMsg('downloadMsg', null, currentLang === 'ar' ? 'لا توجد بيانات لتحميلها بعد.' : 'No data to download yet.', false);
+      return;
+    }
+    try {
+      let blob, fileName;
+      if (r.base64) {
+        // Apps Script backend: real .xlsx via base64
+        const byteChars = atob(r.base64);
+        const byteNumbers = new Array(byteChars.length);
+        for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+        blob = new Blob([new Uint8Array(byteNumbers)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        fileName = r.fileName || 'Nursing_Assessment_Data.xlsx';
+      } else if (typeof r.csv === 'string') {
+        // Cloudflare Worker backend: CSV (BOM added so Excel renders Arabic correctly)
+        blob = new Blob(['\uFEFF' + r.csv], { type: 'text/csv;charset=utf-8;' });
+        fileName = r.fileName || 'Nursing_Assessment_Data.csv';
+      } else {
+        throw new Error('no export data in response');
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setMsg('downloadMsg', null, currentLang === 'ar' ? 'تعذر تجهيز الملف للتحميل.' : 'Could not prepare the file for download.', false);
+    }
+  });
+}
+
+/* =====================  DASHBOARD TAB  ===================== */
+// Every Yes/No or multiple-choice question in the form, grouped the same
+// way the form itself is grouped, so the dashboard reads like a statistical
+// mirror of the form rather than a generic summary.
+const DASHBOARD_CATEGORIES = [
+  {
+    en: 'Triage Screening', ar: 'فحص الفرز المبكر',
+    fields: [
+      { key: 'Fever', en: 'Fever (elevated temperature)', ar: 'الحمى (ارتفاع درجة الحرارة)' },
+      { key: 'Rash', en: 'Rash / unusual skin lesion', ar: 'طفح جلدي / آفة جلدية' },
+      { key: 'CoughSOB', en: 'Cough / shortness of breath', ar: 'سعال / ضيق تنفس' },
+      { key: 'TraveledOutsideKSA', en: 'Traveled outside KSA', ar: 'سفر خارج السعودية' },
+      { key: 'HealthcareWorkerExposure', en: 'Healthcare worker exposure', ar: 'تعرض عامل صحي' },
+      { key: 'CloseContactSimilarSymptoms', en: 'Close contact with similar symptoms', ar: 'مخالطة لأعراض مشابهة' },
+      { key: 'ActionSurgicalMask', en: 'Given surgical mask', ar: 'تم إعطاء كمامة جراحية' },
+      { key: 'ActionIsolationRoom', en: 'Isolation room used', ar: 'استخدام غرفة عزل' },
+      { key: 'ActionWaitingAreaSeparation', en: '3ft waiting area separation', ar: 'فصل 3 أقدام بالانتظار' },
+      { key: 'ActionHandHygiene', en: 'Hand hygiene performed', ar: 'تم تنفيذ نظافة اليدين' },
+      { key: 'ActionPrivateRoom', en: 'Private room pending evaluation', ar: 'غرفة خاصة بانتظار التقييم' }
+    ]
+  },
+  {
+    en: 'General Information', ar: 'المعلومات العامة',
+    fields: [
+      { key: 'ReceivedFrom', en: 'Received from', ar: 'تم الاستقبال من' },
+      { key: 'FirstVisit', en: 'First visit', ar: 'زيارة أولى' },
+      { key: 'LanguageSpoken', en: 'Language spoken', ar: 'اللغة المتحدثة' },
+      { key: 'HistoryTakenFrom', en: 'History taken from', ar: 'أخذ التاريخ من' },
+      { key: 'Allergies', en: 'Allergies', ar: 'الحساسية' },
+      { key: 'ModeOfAccess', en: 'Mode of access', ar: 'طريقة الوصول' },
+      { key: 'ReasonForVisit', en: 'Reason for visit', ar: 'سبب الزيارة' },
+      { key: 'Accompanied', en: 'Accompanied by', ar: 'برفقة' },
+      { key: 'InterpreterNeed', en: 'Interpreter needed', ar: 'الحاجة لمترجم' },
+      { key: 'Diet', en: 'Diet', ar: 'النظام الغذائي' },
+      { key: 'Transportation', en: 'Transportation', ar: 'وسيلة النقل' }
+    ]
+  },
+  {
+    en: 'Initial Nursing Assessment', ar: 'التقييم التمريضي الأولي',
+    fields: [
+      { key: 'TempMethod', en: 'Temperature method', ar: 'طريقة قياس الحرارة' },
+      { key: 'Skin', en: 'Skin', ar: 'الجلد' }
+    ]
+  },
+  {
+    en: 'Nutritional / Functional / Psychological / Social / Pain', ar: 'الغذائي / الوظيفي / النفسي / الاجتماعي / الألم',
+    fields: [
+      { key: 'WeightChangePast6Months', en: 'Weight change (6 months)', ar: 'تغيّر الوزن (6 أشهر)' },
+      { key: 'FunctionalStatus', en: 'Functional status', ar: 'الحالة الوظيفية' },
+      { key: 'PsychologicalStatus', en: 'Psychological status', ar: 'الحالة النفسية' },
+      { key: 'LiveAlone', en: 'Lives alone', ar: 'يعيش بمفرده' },
+      { key: 'CareGiverAvailable', en: 'Care giver available', ar: 'يوجد مقدم رعاية' },
+      { key: 'PainScreening', en: 'Pain screening', ar: 'فحص الألم' }
+    ]
+  },
+  {
+    en: 'Fall Risk Screening', ar: 'فحص خطر السقوط',
+    fields: [
+      { key: 'FallPast3Months', en: 'Fall in past 3 months', ar: 'سقوط خلال 3 أشهر' },
+      { key: 'DifficultyWalking', en: 'Difficulty walking', ar: 'صعوبة في المشي' },
+      { key: 'UseAssistiveDevice', en: 'Uses assistive device', ar: 'يستخدم جهاز مساعد' },
+      { key: 'ReceiveFallRiskMedication', en: 'On fall-risk medication', ar: 'يتناول أدوية خطر سقوط' },
+      { key: 'FallRiskScore', en: 'Fall risk score', ar: 'درجة خطر السقوط' }
+    ]
+  },
+  {
+    en: 'Fall Risk Interventions', ar: 'إجراءات الوقاية من السقوط',
+    fields: [
+      { key: 'InterventionYellowWristband', en: 'Yellow wristband attached', ar: 'تركيب سوار أصفر' },
+      { key: 'InterventionDesignatedClinic', en: 'Sent to designated clinic', ar: 'التوجه للعيادة المخصصة' },
+      { key: 'InterventionWheelChair', en: 'Wheelchair provided', ar: 'توفير كرسي متحرك' },
+      { key: 'InterventionFallsPamphlet', en: 'Falls pamphlet provided', ar: 'تقديم نشرة الوقاية' }
+    ]
+  }
+];
+
+const CHART_PALETTE = ['#3B1E70', '#C9A227', '#6A4BAE', '#E4C34F', '#8a6d00', '#1E8449', '#C0392B', '#6b6480'];
+let chartInstances = {};
+
+function buildChartConfig(dataObj) {
+  const labels = Object.keys(dataObj);
+  const values = Object.values(dataObj);
+  const isYesNo = labels.length <= 2 && labels.every(k => k === 'Yes' || k === 'No');
+
+  if (isYesNo) {
+    const order = ['Yes', 'No'].filter(k => labels.includes(k));
+    const orderedValues = order.map(k => dataObj[k]);
+    const orderedLabels = order.map(k => currentLang === 'ar' ? (k === 'Yes' ? 'نعم' : 'لا') : k);
+    return {
+      type: 'doughnut',
+      data: { labels: orderedLabels, datasets: [{ data: orderedValues, backgroundColor: ['#3B1E70', '#C9A227'] }] },
+      options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+    };
+  }
+
+  return {
+    type: 'bar',
+    data: { labels, datasets: [{ data: values, backgroundColor: labels.map((_, i) => CHART_PALETTE[i % CHART_PALETTE.length]), borderRadius: 6 }] },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+    }
+  };
+}
+
+async function loadDashboard() {
+  setMsg('dashboardMsg', null, '');
+  const container = document.getElementById('dashboardCharts');
+  container.innerHTML = currentLang === 'ar' ? 'جارٍ التحميل...' : 'Loading...';
+
+  const r = await api('getStats', { token: session.token });
+  if (!r.success) {
+    container.innerHTML = '';
+    setMsg('dashboardMsg', r.code, r.message, false);
+    return;
+  }
+
+  document.getElementById('statTotal').textContent = r.total;
+  container.innerHTML = '';
+
+  if (!r.total) {
+    container.innerHTML = `<p class="small-muted">${currentLang === 'ar' ? 'لا توجد بيانات مسجلة بعد.' : 'No data recorded yet.'}</p>`;
+    return;
+  }
+
+  DASHBOARD_CATEGORIES.forEach((cat, catIdx) => {
+    const catTitle = currentLang === 'ar' ? cat.ar : cat.en;
+    const card = document.createElement('div');
+    card.className = 'card';
+    const grid = document.createElement('div');
+    grid.className = 'stats-grid';
+    card.innerHTML = `<h2>${escapeHtml(catTitle)}</h2>`;
+    card.appendChild(grid);
+    container.appendChild(card);
+
+    cat.fields.forEach((f, fIdx) => {
+      const title = currentLang === 'ar' ? f.ar : f.en;
+      const canvasId = 'chart_' + catIdx + '_' + fIdx;
+
+      const item = document.createElement('div');
+      item.className = 'stat-item';
+      item.innerHTML = `<h3>${escapeHtml(title)}</h3><canvas id="${canvasId}" height="170"></canvas>`;
+      grid.appendChild(item);
+
+      const dataObj = (r.charts && r.charts[f.key]) || {};
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      if (chartInstances[canvasId]) chartInstances[canvasId].destroy();
+      chartInstances[canvasId] = new Chart(ctx, buildChartConfig(dataObj));
+    });
+  });
+}
+
+/* =====================  RESTORE SESSION ON LOAD  ===================== */
+(async function init() {
+  applyLang();
+  if (session.token) {
+    const r = await api('checkSession', { token: session.token });
+    if (r.success) { session.fullName = r.fullName; session.email = r.email; session.role = r.role || ''; enterForm(); return; }
+  }
+  showScreen('login');
+})();
+
+/* =====================  YES/NO + CHOICE BUTTONS  ===================== */
+document.querySelectorAll('.yn-group').forEach(group => {
+  group.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      group.querySelectorAll('button').forEach(b => b.classList.remove('active-yes','active-no'));
+      btn.classList.add(btn.dataset.v === 'Yes' ? 'active-yes' : 'active-no');
+      group.dataset.value = btn.dataset.v;
+    });
+  });
+});
+document.querySelectorAll('.choice-grid[data-field]').forEach(group => {
+  group.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      group.querySelectorAll('button').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      group.dataset.value = btn.dataset.v;
+    });
+  });
+});
+
+/* =====================  SIGNATURE PAD  ===================== */
+let sigCtx, drawing = false;
+function initSignaturePad() {
+  const canvas = document.getElementById('sigPad');
+  canvas.width = canvas.offsetWidth;
+  canvas.height = 180;
+  sigCtx = canvas.getContext('2d');
+  sigCtx.lineWidth = 2;
+  sigCtx.lineCap = 'round';
+  sigCtx.strokeStyle = '#241147';
+
+  const pos = e => {
+    const rect = canvas.getBoundingClientRect();
+    const p = e.touches ? e.touches[0] : e;
+    return { x: p.clientX - rect.left, y: p.clientY - rect.top };
+  };
+  const start = e => { drawing = true; const p = pos(e); sigCtx.beginPath(); sigCtx.moveTo(p.x, p.y); e.preventDefault(); };
+  const move = e => { if (!drawing) return; const p = pos(e); sigCtx.lineTo(p.x, p.y); sigCtx.stroke(); e.preventDefault(); };
+  const end = () => { drawing = false; };
+
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', end);
+  canvas.addEventListener('touchstart', start, { passive: false });
+  canvas.addEventListener('touchmove', move, { passive: false });
+  canvas.addEventListener('touchend', end);
+}
+function clearSignature() {
+  sigCtx.clearRect(0, 0, document.getElementById('sigPad').width, document.getElementById('sigPad').height);
+}
+
+/* =====================  COLLECT + SUBMIT  ===================== */
+function collectFormData() {
+  const data = {};
+
+  document.querySelectorAll('.yn-group[data-field]').forEach(g => data[g.dataset.field] = g.dataset.value || '');
+  document.querySelectorAll('.choice-grid[data-field]').forEach(g => data[g.dataset.field] = g.dataset.value || '');
+
+  ['FileNo','PatientName','TravelWhenDetails','ChiefComplaint','Temp','BPSystolic','BPDiastolic',
+   'Pulse','RR','Height','Weight','RecentCareChanges'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) data[id] = el.value;
+  });
+
+  ['ActionSurgicalMask','ActionIsolationRoom','ActionWaitingAreaSeparation','ActionHandHygiene','ActionPrivateRoom',
+   'LiveAlone','CareGiverAvailable','InterventionYellowWristband','InterventionDesignatedClinic',
+   'InterventionWheelChair','InterventionFallsPamphlet'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) data[id] = el.checked ? 'Yes' : 'No';
+  });
+
+  const meds = [];
+  document.querySelectorAll('#fallMedsGrid input[type=checkbox]:checked').forEach(cb => meds.push(cb.value));
+  data['FallRiskMedications'] = meds.join(', ');
+
+  return data;
+}
+
+async function submitForm(btn) {
+  setMsg('formMsg', null, '');
+  const formData = collectFormData();
+  const signature = document.getElementById('sigPad').toDataURL('image/png');
+  await withLoading(btn, currentLang === 'ar' ? 'جارٍ الحفظ...' : 'Saving...', async () => {
+    const r = await api('submitForm', { token: session.token, formData, signature });
+    if (r.success) {
+      setMsg('formMsg', r.code, r.message, true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      setMsg('formMsg', r.code, r.message, false);
+    }
+  });
+}
+</script>
+
+</body>
+</html>
