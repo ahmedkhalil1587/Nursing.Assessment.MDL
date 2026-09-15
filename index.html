@@ -335,31 +335,25 @@
           <button data-v="Normal" data-en="Normal" data-ar="طبيعي">Normal</button><button data-v="Cold" data-en="Cold" data-ar="بارد">Cold</button><button data-v="Cyanotic" data-en="Cyanotic" data-ar="مزرقّ">Cyanotic</button><button data-v="Other" data-en="Other" data-ar="أخرى">Other</button>
         </div>
       </div>
+      <div class="row-q"><div class="qtext" data-en="Nutritional screen: unintentional weight change in past 6 months?" data-ar="الفحص الغذائي: هل حدث تغيّر غير مقصود في الوزن خلال 6 أشهر؟">Nutritional screen: unintentional weight change in past 6 months?</div><div class="yn-group" data-field="WeightChangePast6Months"><button data-v="Yes" data-en="Yes" data-ar="نعم">Yes</button><button data-v="No" data-en="No" data-ar="لا">No</button></div></div>
     </div>
 
     <div class="card">
-      <h2 data-en="Nutritional / Functional / Psychological / Social / Pain Screening" data-ar="الفحص الغذائي / الوظيفي / النفسي / الاجتماعي / الألم">Nutritional / Functional / Psychological / Social / Pain Screening</h2>
-      <div class="row-q"><div class="qtext" data-en="Nutritional screen: unintentional weight change in past 6 months?" data-ar="الفحص الغذائي: هل حدث تغيّر غير مقصود في الوزن خلال 6 أشهر؟">Nutritional screen: unintentional weight change in past 6 months?</div><div class="yn-group" data-field="WeightChangePast6Months"><button data-v="Yes" data-en="Yes" data-ar="نعم">Yes</button><button data-v="No" data-en="No" data-ar="لا">No</button></div></div>
-
-      <div class="field"><label data-en="Functional screen" data-ar="الفحص الوظيفي">Functional screen</label>
-        <div class="choice-grid" data-field="FunctionalStatus">
-          <button data-v="Independent" data-en="Independent" data-ar="مستقل">Independent</button><button data-v="Need assist" data-en="Need assist" data-ar="يحتاج مساعدة">Need assist</button><button data-v="Dependent" data-en="Dependent" data-ar="معتمد على الغير">Dependent</button>
-        </div>
-      </div>
-      <div class="field"><label data-en="Recent changes in ability to care for self" data-ar="تغيّرات حديثة في القدرة على رعاية النفس">Recent changes in ability to care for self</label><input type="text" id="RecentCareChanges"></div>
-
+      <h2 data-en="Psychological &amp; Social Screening" data-ar="الفحص النفسي والاجتماعي">Psychological &amp; Social Screening</h2>
       <div class="field"><label data-en="Psychological" data-ar="الحالة النفسية">Psychological</label>
         <div class="choice-grid" data-field="PsychologicalStatus">
           <button data-v="Oriented" data-en="Oriented" data-ar="واعٍ">Oriented</button><button data-v="Confused" data-en="Confused" data-ar="مرتبك">Confused</button><button data-v="Cooperative" data-en="Cooperative" data-ar="متعاون">Cooperative</button><button data-v="Uncooperative" data-en="Uncooperative" data-ar="غير متعاون">Uncooperative</button><button data-v="Other" data-en="Other" data-ar="أخرى">Other</button>
         </div>
       </div>
-
       <div class="chk-grid">
         <label><input type="checkbox" id="LiveAlone"> <span data-en="Live alone" data-ar="يعيش بمفرده">Live alone</span></label>
         <label><input type="checkbox" id="CareGiverAvailable"> <span data-en="Care giver available" data-ar="يوجد مقدم رعاية">Care giver available</span></label>
       </div>
+    </div>
 
-      <div class="field"><label data-en="Pain Screening" data-ar="فحص الألم">Pain Screening</label>
+    <div class="card">
+      <h2 data-en="Pain Screening" data-ar="فحص الألم">Pain Screening</h2>
+      <div class="field">
         <div class="choice-grid" data-field="PainScreening">
           <button data-v="No" data-en="No pain" data-ar="لا يوجد ألم">No pain</button><button data-v="Yes - complete pain assessment" data-en="Yes, complete pain assessment" data-ar="نعم، أكمل تقييم الألم">Yes, complete pain assessment</button>
         </div>
@@ -367,7 +361,27 @@
     </div>
 
     <div class="card">
-      <h2 data-en="Fall Risk Screening Tool" data-ar="أداة فحص خطر السقوط">Fall Risk Screening Tool</h2>
+      <h2 data-en="Neurological Screening" data-ar="الفحص العصبي">Neurological Screening</h2>
+      <p class="small-muted" data-en="AVPU scale — check all that apply." data-ar="مقياس AVPU — علّم كل ما ينطبق.">AVPU scale — check all that apply.</p>
+      <div class="chk-grid">
+        <label><input type="checkbox" id="NeuroAlert"> <span data-en="A - Alert" data-ar="A - واعٍ (Alert)">A - Alert</span></label>
+        <label><input type="checkbox" id="NeuroConfusion"> <span data-en="C - Confusion (new / worsening)" data-ar="C - ارتباك (جديد / متزايد)">C - Confusion (new / worsening)</span></label>
+        <label><input type="checkbox" id="NeuroVoice"> <span data-en="V - Voice (responsive to voice)" data-ar="V - صوت (يستجيب للصوت)">V - Voice (responsive to voice)</span></label>
+        <label><input type="checkbox" id="NeuroPain"> <span data-en="P - Pain (responsive to pain)" data-ar="P - ألم (يستجيب للألم)">P - Pain (responsive to pain)</span></label>
+        <label><input type="checkbox" id="NeuroUnresponsive"> <span data-en="U - Unresponsive" data-ar="U - لا يستجيب">U - Unresponsive</span></label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 data-en="Functional Assessment" data-ar="التقييم الوظيفي">Functional Assessment</h2>
+      <div class="field"><label data-en="Functional screen" data-ar="الفحص الوظيفي">Functional screen</label>
+        <div class="choice-grid" data-field="FunctionalStatus">
+          <button data-v="Independent" data-en="Independent" data-ar="مستقل">Independent</button><button data-v="Need assist" data-en="Need assist" data-ar="يحتاج مساعدة">Need assist</button><button data-v="Dependent" data-en="Dependent" data-ar="معتمد على الغير">Dependent</button>
+        </div>
+      </div>
+      <div class="field"><label data-en="Recent changes in ability to care for self" data-ar="تغيّرات حديثة في القدرة على رعاية النفس">Recent changes in ability to care for self</label><input type="text" id="RecentCareChanges"></div>
+
+      <div class="section-title" data-en="Fall Risk Screening Tool" data-ar="أداة فحص خطر السقوط">Fall Risk Screening Tool</div>
       <p class="small-muted" data-en="If the answer to any of the questions is Yes, the patient is considered at risk for fall." data-ar="إذا كانت الإجابة على أي من الأسئلة نعم، يُعتبر المريض معرضاً لخطر السقوط.">If the answer to any of the questions is Yes, the patient is considered at risk for fall.</p>
       <div class="row-q"><div class="qtext" data-en="Have you had a fall in the past 3 months?" data-ar="هل سقطت خلال الأشهر الثلاثة الماضية؟">Have you had a fall in the past 3 months?</div><div class="yn-group" data-field="FallPast3Months"><button data-v="Yes" data-en="Yes" data-ar="نعم">Yes</button><button data-v="No" data-en="No" data-ar="لا">No</button></div></div>
       <div class="row-q"><div class="qtext" data-en="Do you have difficulty in walking?" data-ar="هل لديك صعوبة في المشي؟">Do you have difficulty in walking?</div><div class="yn-group" data-field="DifficultyWalking"><button data-v="Yes" data-en="Yes" data-ar="نعم">Yes</button><button data-v="No" data-en="No" data-ar="لا">No</button></div></div>
@@ -422,7 +436,7 @@
 
 <script>
 /* =====================  CONFIG  ===================== */
-const API_URL = 'https://script.google.com/macros/s/AKfycbyiSEXfODdwtkcrfR6Q3szq8xbvXla9KDQVgP1QmqQhZ8pDSJYadKoLFALFSHXsofZ5/exec';
+const API_URL = 'https://nursing-assessment-api.madlouh.workers.dev';
 
 /* =====================  LANGUAGE  ===================== */
 let currentLang = localStorage.getItem('lang') || 'ar';
@@ -741,16 +755,30 @@ async function downloadSubmissions(btn) {
       setMsg('downloadMsg', r.code, r.message, false);
       return;
     }
+    if (r.empty) {
+      setMsg('downloadMsg', null, currentLang === 'ar' ? 'لا توجد بيانات لتحميلها بعد.' : 'No data to download yet.', false);
+      return;
+    }
     try {
-      const byteChars = atob(r.base64);
-      const byteNumbers = new Array(byteChars.length);
-      for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
-      const byteArray = new Uint8Array(byteNumbers);
-      const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      let blob, fileName;
+      if (r.base64) {
+        // Apps Script backend: real .xlsx via base64
+        const byteChars = atob(r.base64);
+        const byteNumbers = new Array(byteChars.length);
+        for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+        blob = new Blob([new Uint8Array(byteNumbers)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        fileName = r.fileName || 'Nursing_Assessment_Data.xlsx';
+      } else if (typeof r.csv === 'string') {
+        // Cloudflare Worker backend: CSV (BOM added so Excel renders Arabic correctly)
+        blob = new Blob(['\uFEFF' + r.csv], { type: 'text/csv;charset=utf-8;' });
+        fileName = r.fileName || 'Nursing_Assessment_Data.csv';
+      } else {
+        throw new Error('no export data in response');
+      }
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = r.fileName || 'Nursing_Assessment_Data.xlsx';
+      a.download = fileName;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -767,7 +795,7 @@ async function downloadSubmissions(btn) {
 // mirror of the form rather than a generic summary.
 const DASHBOARD_CATEGORIES = [
   {
-    en: 'Triage Screening', ar: 'فحص الفرز المبكر',
+    en: 'Communicable Disease Screening', ar: 'فحص الأمراض المعدية',
     fields: [
       { key: 'Fever', en: 'Fever (elevated temperature)', ar: 'الحمى (ارتفاع درجة الحرارة)' },
       { key: 'Rash', en: 'Rash / unusual skin lesion', ar: 'طفح جلدي / آفة جلدية' },
@@ -802,33 +830,43 @@ const DASHBOARD_CATEGORIES = [
     en: 'Initial Nursing Assessment', ar: 'التقييم التمريضي الأولي',
     fields: [
       { key: 'TempMethod', en: 'Temperature method', ar: 'طريقة قياس الحرارة' },
-      { key: 'Skin', en: 'Skin', ar: 'الجلد' }
+      { key: 'Skin', en: 'Skin', ar: 'الجلد' },
+      { key: 'WeightChangePast6Months', en: 'Weight change (6 months)', ar: 'تغيّر الوزن (6 أشهر)' }
     ]
   },
   {
-    en: 'Nutritional / Functional / Psychological / Social / Pain', ar: 'الغذائي / الوظيفي / النفسي / الاجتماعي / الألم',
+    en: 'Psychological & Social Screening', ar: 'الفحص النفسي والاجتماعي',
     fields: [
-      { key: 'WeightChangePast6Months', en: 'Weight change (6 months)', ar: 'تغيّر الوزن (6 أشهر)' },
-      { key: 'FunctionalStatus', en: 'Functional status', ar: 'الحالة الوظيفية' },
       { key: 'PsychologicalStatus', en: 'Psychological status', ar: 'الحالة النفسية' },
       { key: 'LiveAlone', en: 'Lives alone', ar: 'يعيش بمفرده' },
-      { key: 'CareGiverAvailable', en: 'Care giver available', ar: 'يوجد مقدم رعاية' },
+      { key: 'CareGiverAvailable', en: 'Care giver available', ar: 'يوجد مقدم رعاية' }
+    ]
+  },
+  {
+    en: 'Pain Screening', ar: 'فحص الألم',
+    fields: [
       { key: 'PainScreening', en: 'Pain screening', ar: 'فحص الألم' }
     ]
   },
   {
-    en: 'Fall Risk Screening', ar: 'فحص خطر السقوط',
+    en: 'Neurological Screening', ar: 'الفحص العصبي',
     fields: [
+      { key: 'NeuroAlert', en: 'A - Alert', ar: 'A - واعٍ' },
+      { key: 'NeuroConfusion', en: 'C - Confusion', ar: 'C - ارتباك' },
+      { key: 'NeuroVoice', en: 'V - Voice', ar: 'V - صوت' },
+      { key: 'NeuroPain', en: 'P - Pain', ar: 'P - ألم' },
+      { key: 'NeuroUnresponsive', en: 'U - Unresponsive', ar: 'U - لا يستجيب' }
+    ]
+  },
+  {
+    en: 'Functional Assessment', ar: 'التقييم الوظيفي',
+    fields: [
+      { key: 'FunctionalStatus', en: 'Functional status', ar: 'الحالة الوظيفية' },
       { key: 'FallPast3Months', en: 'Fall in past 3 months', ar: 'سقوط خلال 3 أشهر' },
       { key: 'DifficultyWalking', en: 'Difficulty walking', ar: 'صعوبة في المشي' },
       { key: 'UseAssistiveDevice', en: 'Uses assistive device', ar: 'يستخدم جهاز مساعد' },
       { key: 'ReceiveFallRiskMedication', en: 'On fall-risk medication', ar: 'يتناول أدوية خطر سقوط' },
-      { key: 'FallRiskScore', en: 'Fall risk score', ar: 'درجة خطر السقوط' }
-    ]
-  },
-  {
-    en: 'Fall Risk Interventions', ar: 'إجراءات الوقاية من السقوط',
-    fields: [
+      { key: 'FallRiskScore', en: 'Fall risk score', ar: 'درجة خطر السقوط' },
       { key: 'InterventionYellowWristband', en: 'Yellow wristband attached', ar: 'تركيب سوار أصفر' },
       { key: 'InterventionDesignatedClinic', en: 'Sent to designated clinic', ar: 'التوجه للعيادة المخصصة' },
       { key: 'InterventionWheelChair', en: 'Wheelchair provided', ar: 'توفير كرسي متحرك' },
@@ -990,7 +1028,8 @@ function collectFormData() {
 
   ['ActionSurgicalMask','ActionIsolationRoom','ActionWaitingAreaSeparation','ActionHandHygiene','ActionPrivateRoom',
    'LiveAlone','CareGiverAvailable','InterventionYellowWristband','InterventionDesignatedClinic',
-   'InterventionWheelChair','InterventionFallsPamphlet'].forEach(id => {
+   'InterventionWheelChair','InterventionFallsPamphlet',
+   'NeuroAlert','NeuroConfusion','NeuroVoice','NeuroPain','NeuroUnresponsive'].forEach(id => {
     const el = document.getElementById(id);
     if (el) data[id] = el.checked ? 'Yes' : 'No';
   });
