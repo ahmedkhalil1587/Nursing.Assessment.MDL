@@ -204,13 +204,22 @@
   </section>
 
   <!-- ADMIN PANEL -->
-  <section class="card hidden" id="screen-admin">
-    <h2 data-en="Admin Panel - User Accounts" data-ar="لوحة الإدارة - حسابات المستخدمين">لوحة الإدارة - حسابات المستخدمين</h2>
-    <div id="adminMsg"></div>
-    <div id="adminUsersList"></div>
-    <p class="center" style="margin-top:14px;">
-      <button class="link-btn" onclick="switchTab('form')" data-en="Back to form" data-ar="عودة للفورم">عودة للفورم</button>
-    </p>
+  <section class="hidden" id="screen-admin">
+    <div class="card">
+      <h2 data-en="Form Settings" data-ar="إعدادات الفورم">إعدادات الفورم</h2>
+      <div class="row-q">
+        <div class="qtext" data-en="Show patient signature field in the form" data-ar="إظهار حقل توقيع المريض في الفورم">Show patient signature field in the form</div>
+        <button class="btn gold" id="toggleSignatureBtn" onclick="toggleSignatureSetting(this)">...</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2 data-en="Admin Panel - User Accounts" data-ar="لوحة الإدارة - حسابات المستخدمين">لوحة الإدارة - حسابات المستخدمين</h2>
+      <div id="adminMsg"></div>
+      <div id="adminUsersList"></div>
+      <p class="center" style="margin-top:14px;">
+        <button class="link-btn" onclick="switchTab('form')" data-en="Back to form" data-ar="عودة للفورم">عودة للفورم</button>
+      </p>
+    </div>
   </section>
 
   <!-- DOWNLOADS -->
@@ -416,7 +425,7 @@
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="signatureCard">
       <h2 data-en="Patient Electronic Signature" data-ar="توقيع المريض الإلكتروني">توقيع المريض الإلكتروني</h2>
       <canvas id="sigPad"></canvas>
       <div class="sig-actions">
@@ -462,7 +471,8 @@ const MESSAGES = {
   status_updated:      { ar: 'تم تحديث حالة الحساب.', en: 'Account status updated.' },
   busy:                { ar: 'النظام مشغول، حاول مرة أخرى.', en: 'System is busy, please try again.' },
   server_error:        { ar: 'حدث خطأ في الخادم. حاول مرة أخرى.', en: 'A server error occurred. Please try again.' },
-  export_failed:       { ar: 'تعذر تجهيز ملف الإكسيل. حاول مرة أخرى.', en: 'Could not prepare the Excel file. Please try again.' }
+  export_failed:       { ar: 'تعذر تجهيز ملف الإكسيل. حاول مرة أخرى.', en: 'Could not prepare the Excel file. Please try again.' },
+  setting_updated:     { ar: 'تم تحديث الإعداد.', en: 'Setting updated.' }
 };
 
 function t(code, fallback) {
@@ -478,6 +488,7 @@ function applyLang() {
   });
   document.getElementById('langBtn').textContent = currentLang === 'ar' ? 'English' : 'عربي';
   localStorage.setItem('lang', currentLang);
+  updateSignatureToggleButton();
 }
 function toggleLang() {
   currentLang = currentLang === 'ar' ? 'en' : 'ar';
@@ -584,7 +595,7 @@ function showScreen(name) {
 function switchTab(tab) {
   showScreen(tab);
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-  if (tab === 'admin') loadAdminUsers();
+  if (tab === 'admin') { loadAdminUsers(); updateSignatureToggleButton(); }
   if (tab === 'dashboard') loadDashboard();
 }
 
@@ -661,6 +672,52 @@ async function enterForm() {
   document.getElementById('adminTabBtn').style.display = (session.role === 'Admin') ? 'inline-block' : 'none';
   switchTab('form');
   initSignaturePad();
+  loadAppSettings();
+}
+
+/* =====================  APP SETTINGS  ===================== */
+let appSettings = { show_signature: 'true' };
+
+async function loadAppSettings() {
+  const r = await api('getSettings', {});
+  if (r.success && r.settings) {
+    appSettings = r.settings;
+    applySignatureVisibility();
+    updateSignatureToggleButton();
+  }
+}
+
+function applySignatureVisibility() {
+  const card = document.getElementById('signatureCard');
+  if (card) card.classList.toggle('hidden', appSettings.show_signature === 'false');
+}
+
+function updateSignatureToggleButton() {
+  const btn = document.getElementById('toggleSignatureBtn');
+  if (!btn) return;
+  const isOn = appSettings.show_signature !== 'false';
+  btn.textContent = isOn ? (currentLang === 'ar' ? 'ظاهر' : 'Shown') : (currentLang === 'ar' ? 'مخفي' : 'Hidden');
+  btn.style.background = isOn ? '' : '#C0392B';
+  btn.style.color = isOn ? '' : '#fff';
+}
+
+async function toggleSignatureSetting(btn) {
+  if (btn.disabled) return;
+  const newVal = appSettings.show_signature === 'false' ? 'true' : 'false';
+  btn.disabled = true;
+  btn.textContent = '...';
+  try {
+    const r = await api('updateSetting', { token: session.token, key: 'show_signature', value: newVal });
+    if (r.success) {
+      appSettings.show_signature = newVal;
+      applySignatureVisibility();
+    } else {
+      setMsg('adminMsg', r.code, r.message, false);
+    }
+  } finally {
+    btn.disabled = false;
+    updateSignatureToggleButton();
+  }
 }
 
 /* =====================  ADMIN PANEL  ===================== */
