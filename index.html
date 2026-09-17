@@ -448,7 +448,8 @@
     <div class="card">
       <h2 data-en="Confirm & Save" data-ar="تأكيد وحفظ">تأكيد وحفظ</h2>
       <p><span data-en="Nurse responsible for this form:" data-ar="الممرضة المسؤولة عن تسجيل هذا النموذج:">الممرضة المسؤولة عن تسجيل هذا النموذج:</span> <strong id="nurseNameDisplay"></strong></p>
-      <button class="btn block" onclick="submitForm(this)" data-en="Save form" data-ar="حفظ النموذج">حفظ النموذج</button>
+      <button class="btn block" id="saveFormBtn" onclick="submitForm(this)" data-en="Save form" data-ar="حفظ النموذج">حفظ النموذج</button>
+      <button class="btn gold block hidden" id="addNewBtn" style="margin-top:10px;" onclick="startNewAssessment()" data-en="+ Add New" data-ar="+ إضافة جديد">+ إضافة جديد</button>
     </div>
 
   </section>
@@ -1179,11 +1180,41 @@ async function submitForm(btn) {
     const r = await api('submitForm', { token: session.token, formData, signature });
     if (r.success) {
       setMsg('formMsg', r.code, r.message, true);
+      document.getElementById('saveFormBtn').classList.add('hidden');
+      document.getElementById('addNewBtn').classList.remove('hidden');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       setMsg('formMsg', r.code, r.message, false);
     }
   });
+}
+
+function startNewAssessment() {
+  const form = document.getElementById('screen-form');
+
+  form.querySelectorAll('input[type="text"], input[type="number"], textarea').forEach(el => { el.value = ''; });
+  form.querySelectorAll('input[type="checkbox"]').forEach(el => { el.checked = false; });
+
+  form.querySelectorAll('.yn-group[data-field]').forEach(group => {
+    delete group.dataset.value;
+    group.querySelectorAll('button').forEach(b => b.classList.remove('active-yes', 'active-no'));
+  });
+  form.querySelectorAll('.choice-grid[data-field]').forEach(group => {
+    delete group.dataset.value;
+    group.querySelectorAll('button').forEach(b => b.classList.remove('selected'));
+  });
+
+  const painContainer = document.getElementById('painScaleButtons');
+  painContainer.dataset.value = '';
+  painContainer.querySelectorAll('button').forEach(b => b.classList.remove('selected-pain'));
+  document.getElementById('painScaleLabel').textContent = '';
+  document.getElementById('painScaleWrap').classList.add('hidden');
+
+  clearSignature();
+  setMsg('formMsg', null, '');
+  document.getElementById('saveFormBtn').classList.remove('hidden');
+  document.getElementById('addNewBtn').classList.add('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 </script>
 
