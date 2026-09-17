@@ -123,6 +123,13 @@
   .stats-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:18px; margin-top:12px;}
   .stat-item{background:#fbfaff; border:1px solid #e3e0f0; border-radius:12px; padding:14px;}
   .stat-item h3{font-size:12.5px; margin:0 0 10px; color:var(--muted); text-align:center; font-weight:700; min-height:32px;}
+  .pain-scale{display:flex; flex-wrap:wrap; gap:8px; margin:10px 0;}
+  .pain-scale button{
+    width:44px; height:44px; border-radius:50%; border:3px solid transparent; cursor:pointer;
+    font-weight:800; font-size:14px; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.3); transition:.15s;
+  }
+  .pain-scale button:hover{transform:scale(1.08);}
+  .pain-scale button.selected-pain{border-color:var(--purple-dark); transform:scale(1.15); box-shadow:0 2px 8px rgba(59,30,112,0.4);}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 </head>
@@ -367,6 +374,11 @@
           <button data-v="No" data-en="No pain" data-ar="لا يوجد ألم">No pain</button><button data-v="Yes - complete pain assessment" data-en="Yes, complete pain assessment" data-ar="نعم، أكمل تقييم الألم">Yes, complete pain assessment</button>
         </div>
       </div>
+      <div id="painScaleWrap" class="hidden">
+        <div class="section-title" data-en="Pain Scale (0-10)" data-ar="مقياس الألم (0-10)">Pain Scale (0-10)</div>
+        <div class="pain-scale" id="painScaleButtons"></div>
+        <p class="small-muted" id="painScaleLabel"></p>
+      </div>
     </div>
 
     <div class="card">
@@ -489,6 +501,7 @@ function applyLang() {
   document.getElementById('langBtn').textContent = currentLang === 'ar' ? 'English' : 'عربي';
   localStorage.setItem('lang', currentLang);
   updateSignatureToggleButton();
+  updatePainScaleLabel();
 }
 function toggleLang() {
   currentLang = currentLang === 'ar' ? 'en' : 'ar';
@@ -672,6 +685,7 @@ async function enterForm() {
   document.getElementById('adminTabBtn').style.display = (session.role === 'Admin') ? 'inline-block' : 'none';
   switchTab('form');
   initSignaturePad();
+  renderPainScale();
   loadAppSettings();
 }
 
@@ -902,7 +916,8 @@ const DASHBOARD_CATEGORIES = [
   {
     en: 'Pain Screening', ar: 'فحص الألم',
     fields: [
-      { key: 'PainScreening', en: 'Pain screening', ar: 'فحص الألم' }
+      { key: 'PainScreening', en: 'Pain screening', ar: 'فحص الألم' },
+      { key: 'PainScaleCategory', en: 'Pain scale level', ar: 'مستوى مقياس الألم' }
     ]
   },
   {
@@ -1035,9 +1050,63 @@ document.querySelectorAll('.choice-grid[data-field]').forEach(group => {
       group.querySelectorAll('button').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       group.dataset.value = btn.dataset.v;
+      if (group.dataset.field === 'PainScreening') togglePainScaleVisibility(btn.dataset.v);
     });
   });
 });
+
+/* =====================  PAIN SCALE  ===================== */
+const PAIN_SCALE_COLORS = ['#1E8449','#43A047','#7CB342','#C0CA33','#FDD835','#FFB300','#FB8C00','#F4511E','#E53935','#D32F2F','#B71C1C'];
+
+function renderPainScale() {
+  const container = document.getElementById('painScaleButtons');
+  if (!container || container.children.length) return; // already rendered
+  for (let i = 0; i <= 10; i++) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = i;
+    btn.dataset.v = i;
+    btn.style.background = PAIN_SCALE_COLORS[i];
+    btn.addEventListener('click', () => selectPainScale(i));
+    container.appendChild(btn);
+  }
+}
+
+function painCategory(v) {
+  v = Number(v);
+  if (v <= 1) return { en: 'No Pain', ar: 'لا يوجد ألم' };
+  if (v <= 3) return { en: 'Mild Pain', ar: 'ألم خفيف' };
+  if (v <= 6) return { en: 'Moderate Pain', ar: 'ألم متوسط' };
+  return { en: 'Severe Pain', ar: 'ألم شديد' };
+}
+
+function selectPainScale(v) {
+  const container = document.getElementById('painScaleButtons');
+  container.dataset.value = v;
+  container.querySelectorAll('button').forEach(b => b.classList.toggle('selected-pain', Number(b.dataset.v) === v));
+  updatePainScaleLabel();
+}
+
+function updatePainScaleLabel() {
+  const container = document.getElementById('painScaleButtons');
+  const label = document.getElementById('painScaleLabel');
+  if (!container || !label) return;
+  if (container.dataset.value === undefined || container.dataset.value === '') { label.textContent = ''; return; }
+  const cat = painCategory(container.dataset.value);
+  label.textContent = (currentLang === 'ar' ? cat.ar : cat.en) + ` (${container.dataset.value}/10)`;
+}
+
+function togglePainScaleVisibility(painScreeningValue) {
+  const wrap = document.getElementById('painScaleWrap');
+  const show = painScreeningValue === 'Yes - complete pain assessment';
+  wrap.classList.toggle('hidden', !show);
+  if (!show) {
+    const container = document.getElementById('painScaleButtons');
+    container.dataset.value = '';
+    container.querySelectorAll('button').forEach(b => b.classList.remove('selected-pain'));
+    document.getElementById('painScaleLabel').textContent = '';
+  }
+}
 
 /* =====================  SIGNATURE PAD  ===================== */
 let sigCtx, drawing = false;
@@ -1094,6 +1163,10 @@ function collectFormData() {
   const meds = [];
   document.querySelectorAll('#fallMedsGrid input[type=checkbox]:checked').forEach(cb => meds.push(cb.value));
   data['FallRiskMedications'] = meds.join(', ');
+
+  const painVal = document.getElementById('painScaleButtons').dataset.value;
+  data['PainScale'] = painVal || '';
+  data['PainScaleCategory'] = painVal ? painCategory(painVal).en : '';
 
   return data;
 }
