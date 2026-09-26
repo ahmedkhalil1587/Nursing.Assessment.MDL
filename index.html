@@ -361,9 +361,10 @@
           <button data-v="Oriented" data-en="Oriented" data-ar="واعٍ">Oriented</button><button data-v="Confused" data-en="Confused" data-ar="مرتبك">Confused</button><button data-v="Cooperative" data-en="Cooperative" data-ar="متعاون">Cooperative</button><button data-v="Uncooperative" data-en="Uncooperative" data-ar="غير متعاون">Uncooperative</button><button data-v="With Family" data-en="With Family" data-ar="مع الأسرة">With Family</button><button data-v="Other" data-en="Other" data-ar="أخرى">Other</button>
         </div>
       </div>
-      <div class="chk-grid">
-        <label><input type="checkbox" id="LiveAlone"> <span data-en="Live alone" data-ar="يعيش بمفرده">Live alone</span></label>
-        <label><input type="checkbox" id="CareGiverAvailable"> <span data-en="Care giver available" data-ar="يوجد مقدم رعاية">Care giver available</span></label>
+      <div class="field"><label data-en="Social assessment" data-ar="التقييم الاجتماعي">Social assessment</label>
+        <div class="choice-grid" data-field="SocialSituation">
+          <button data-v="Alone" data-en="Alone" data-ar="بمفرده">Alone</button><button data-v="Living with Family" data-en="Living with Family" data-ar="يعيش مع الأسرة">Living with Family</button><button data-v="With Caregiver" data-en="With Caregiver" data-ar="مع مقدم رعاية">With Caregiver</button>
+        </div>
       </div>
     </div>
 
@@ -910,8 +911,7 @@ const DASHBOARD_CATEGORIES = [
     en: 'Psychological & Social Screening', ar: 'الفحص النفسي والاجتماعي',
     fields: [
       { key: 'PsychologicalStatus', en: 'Psychological status', ar: 'الحالة النفسية' },
-      { key: 'LiveAlone', en: 'Lives alone', ar: 'يعيش بمفرده' },
-      { key: 'CareGiverAvailable', en: 'Care giver available', ar: 'يوجد مقدم رعاية' }
+      { key: 'SocialSituation', en: 'Social assessment', ar: 'التقييم الاجتماعي' }
     ]
   },
   {
@@ -1154,7 +1154,7 @@ function collectFormData() {
   });
 
   ['ActionSurgicalMask','ActionIsolationRoom','ActionWaitingAreaSeparation','ActionHandHygiene','ActionPrivateRoom',
-   'LiveAlone','CareGiverAvailable','InterventionYellowWristband','InterventionDesignatedClinic',
+   'InterventionYellowWristband','InterventionDesignatedClinic',
    'InterventionWheelChair','InterventionFallsPamphlet',
    'NeuroAlert','NeuroConfusion','NeuroVoice','NeuroPain','NeuroUnresponsive'].forEach(id => {
     const el = document.getElementById(id);
